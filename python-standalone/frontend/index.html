@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DermaAI — Skin Cancer Detection</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">DA</div>
+        <div class="logo-text">
+          <strong>DermaAI</strong>
+          <small>Skin Cancer Detection</small>
+        </div>
+      </div>
+      <div class="doctor-profile">
+        <div class="avatar purple">MA</div>
+        <div>
+          <strong>Dr. Muhammad Ali</strong>
+          <small>Dermatologist</small>
+          <div class="online-badge">● Online</div>
+        </div>
+      </div>
+      <nav>
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">⊞</span> Dashboard
+        </a>
+        <a href="#" class="nav-item" data-page="analyze">
+          <span class="nav-icon">⊕</span> Analyze
+        </a>
+        <a href="#" class="nav-item" data-page="doctors">
+          <span class="nav-icon">⊙</span> Doctors
+        </a>
+        <a href="#" class="nav-item" data-page="history">
+          <span class="nav-icon">⊜</span> History
+        </a>
+      </nav>
+      <div class="emergency-box">
+        <div class="emergency-title">🔔 Emergency Alert</div>
+        <p>High risk cases are auto-notified to doctors</p>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main-content">
+      <!-- Dashboard Page -->
+      <div id="page-dashboard" class="page active">
+        <div class="page-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p class="subtitle">Welcome back, Dr. Muhammad Ali</p>
+          </div>
+          <div id="pst-clock" class="clock"></div>
+        </div>
+
+        <div class="greeting-banner">
+          <div>
+            <h2>Good morning, Dr. Muhammad Ali</h2>
+            <p>Pakistan Dermatology Initiative — AI Analysis Summary</p>
+          </div>
+          <span class="pk-badge">🇵🇰 Pakistan</span>
+        </div>
+
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card purple">
+            <div>
+              <div class="stat-label">TOTAL ANALYSES</div>
+              <div class="stat-value" id="stat-total">—</div>
+            </div>
+            <div class="stat-icon">📊</div>
+          </div>
+          <div class="stat-card red">
+            <div>
+              <div class="stat-label">HIGH RISK CASES</div>
+              <div class="stat-value" id="stat-high-risk">—</div>
+            </div>
+            <div class="stat-icon">⚠</div>
+          </div>
+          <div class="stat-card green">
+            <div>
+              <div class="stat-label">DOCTORS ONLINE</div>
+              <div class="stat-value" id="stat-doctors">12</div>
+            </div>
+            <div class="stat-icon">👨‍⚕️</div>
+          </div>
+          <div class="stat-card blue">
+            <div>
+              <div class="stat-label">APPOINTMENTS</div>
+              <div class="stat-value" id="stat-appts">34</div>
+            </div>
+            <div class="stat-icon">📅</div>
+          </div>
+          <div class="stat-card teal">
+            <div>
+              <div class="stat-label">TOTAL PATIENTS</div>
+              <div class="stat-value" id="stat-patients">—</div>
+            </div>
+            <div class="stat-icon">🏥</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <!-- Upload Panel -->
+          <div class="card">
+            <h3>Analyze Skin Lesion</h3>
+            <div id="upload-zone" class="upload-zone">
+              <div class="upload-icon">⬆</div>
+              <strong>Drag & drop or click to upload</strong>
+              <p>JPG, PNG up to 10MB</p>
+              <input type="file" id="file-input" accept="image/*" hidden />
+            </div>
+            <div id="preview-container" style="display:none">
+              <img id="preview-img" src="" alt="preview" />
+              <button id="btn-remove-img" class="btn-ghost">✕ Remove</button>
+            </div>
+            <div class="form-group">
+              <label>Patient Name</label>
+              <input type="text" id="patient-name" placeholder="e.g. Muhammad Ali" />
+            </div>
+            <div class="form-group">
+              <label>Clinical Notes</label>
+              <input type="text" id="clinical-notes" placeholder="Dark spot on back for 3 months..." />
+            </div>
+            <button id="btn-analyze" class="btn-primary" disabled>Run AI Analysis</button>
+            <div id="analysis-result" style="display:none" class="result-box"></div>
+          </div>
+
+          <!-- Chat Panel -->
+          <div class="card">
+            <h3>AI Doctor Assistant</h3>
+            <div id="chat-messages" class="chat-messages">
+              <div class="chat-empty">Ask me about any skin analysis findings...</div>
+            </div>
+            <div class="chat-input">
+              <input type="text" id="chat-input" placeholder="Ask me anything..." />
+              <button id="btn-send" class="btn-primary">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="two-col">
+          <div class="card">
+            <h3>Risk Progress Prediction</h3>
+            <canvas id="risk-chart" height="200"></canvas>
+          </div>
+          <div class="card">
+            <h3>Condition Distribution</h3>
+            <canvas id="pie-chart" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent History Table -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Analysis History</h3>
+            <input type="text" id="history-search" placeholder="Search by patient or ID..." class="search-input" />
+          </div>
+          <div class="table-wrapper">
+            <table id="history-table">
+              <thead>
+                <tr>
+                  <th>Patient ID</th><th>Patient Name</th><th>Prediction</th>
+                  <th>Risk Level</th><th>Confidence</th><th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody">
+                <tr><td colspan="6" class="empty-row">No analyses yet. Upload your first image above.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Doctors Page -->
+      <div id="page-doctors" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Pakistani Doctors</h1>
+            <p class="subtitle">Top dermatologists across Pakistan</p>
+          </div>
+        </div>
+        <div class="city-filter" id="city-filter">
+          <button class="filter-btn active" data-city="All">All</button>
+          <button class="filter-btn" data-city="Lahore">Lahore</button>
+          <button class="filter-btn" data-city="Karachi">Karachi</button>
+          <button class="filter-btn" data-city="Islamabad">Islamabad</button>
+          <button class="filter-btn" data-city="Rawalpindi">Rawalpindi</button>
+          <button class="filter-btn" data-city="Peshawar">Peshawar</button>
+        </div>
+        <div id="doctors-grid" class="doctors-grid"></div>
+      </div>
+
+      <!-- History Page -->
+      <div id="page-history" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Analysis History</h1>
+            <p class="subtitle">Search and review all past analyses</p>
+          </div>
+        </div>
+        <div class="card">
+          <input type="text" id="full-history-search" placeholder="Search by patient name or ID..." class="search-input full-width" />
+        </div>
+        <div class="card">
+          <table id="full-history-table">
+            <thead>
+              <tr>
+                <th>Patient ID</th><th>Patient Name</th><th>Age</th><th>Gender</th>
+                <th>Prediction</th><th>Risk Level</th><th>Confidence</th><th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="full-history-tbody">
+              <tr><td colspan="8" class="empty-row">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Analyze Page -->
+      <div id="page-analyze" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Analyze Skin Lesion</h1>
+            <p class="subtitle">Upload a dermoscopic image for AI-powered detection</p>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <h3>Upload Image</h3>
+            <div id="analyze-upload-zone" class="upload-zone large">
+              <div class="upload-icon">⬆</div>
+              <strong>Drag & drop or click to browse</strong>
+              <p>High-resolution dermoscopic images give the most accurate results</p>
+              <input type="file" id="analyze-file-input" accept="image/*" hidden />
+              <button class="btn-primary" onclick="document.getElementById('analyze-file-input').click()">Browse Files</button>
+            </div>
+            <div class="risk-factors-panel">
+              <h4>Patient Risk Factors</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Sun Exposure</label>
+                  <select id="rf-sun"><option>Low</option><option selected>Moderate</option><option>High</option></select>
+                </div>
+                <div class="form-group">
+                  <label>Skin Type</label>
+                  <select id="rf-skin"><option>Type I</option><option selected>Type II</option><option>Type III</option><option>Type IV</option></select>
+                </div>
+              </div>
+              <label class="checkbox-label"><input type="checkbox" id="rf-family" /> Family history of cancer</label>
+              <label class="checkbox-label"><input type="checkbox" id="rf-immune" /> Immune condition</label>
+            </div>
+          </div>
+          <div class="card" id="analyze-result-panel">
+            <div class="result-placeholder">
+              <div class="result-placeholder-icon">🔬</div>
+              <h3>Analysis Result</h3>
+              <p>Upload a skin lesion image to see AI prediction</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

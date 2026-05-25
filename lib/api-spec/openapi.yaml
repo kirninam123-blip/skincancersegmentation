@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: DermaAI - Skin Cancer Detection API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: analyses
+    description: Skin lesion analysis
+  - name: doctors
+    description: Doctor profiles
+  - name: patients
+    description: Patient management
+  - name: chat
+    description: AI Doctor Assistant
+  - name: dashboard
+    description: Dashboard stats
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,201 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /analyses:
+    get:
+      operationId: listAnalyses
+      tags: [analyses]
+      summary: List all analyses (history)
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: patientId
+          in: query
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of analyses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Analysis"
+    post:
+      operationId: createAnalysis
+      tags: [analyses]
+      summary: Create a new skin analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalysisInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Analysis"
+
+  /analyses/{id}:
+    get:
+      operationId: getAnalysis
+      tags: [analyses]
+      summary: Get a single analysis
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Analysis detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Analysis"
+
+  /analyses/upload:
+    post:
+      operationId: uploadImage
+      tags: [analyses]
+      summary: Upload an image for analysis (returns analysis result)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageUploadInput"
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResult"
+
+  /analyses/{id}/report:
+    get:
+      operationId: downloadReport
+      tags: [analyses]
+      summary: Download PDF report for an analysis
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: PDF report info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportInfo"
+
+  /analyses/similar/{id}:
+    get:
+      operationId: getSimilarCases
+      tags: [analyses]
+      summary: Find similar cases for an analysis
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Similar cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SimilarCase"
+
+  /doctors:
+    get:
+      operationId: listDoctors
+      tags: [doctors]
+      summary: List doctors
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of doctors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Doctor"
+
+  /chat/message:
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a message to AI Doctor Assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
+  /chat/history:
+    get:
+      operationId: getChatHistory
+      tags: [chat]
+      summary: Get chat history
+      responses:
+        "200":
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +237,347 @@ components:
       required:
         - status
 
+    DashboardStats:
+      type: object
+      properties:
+        totalAnalyses:
+          type: integer
+        highRiskCases:
+          type: integer
+        doctorsOnline:
+          type: integer
+        appointments:
+          type: integer
+        totalPatients:
+          type: integer
+        aiAccuracyRate:
+          type: number
+        analysesToday:
+          type: integer
+        conditionDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConditionCount"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/Analysis"
+      required:
+        - totalAnalyses
+        - highRiskCases
+        - doctorsOnline
+        - appointments
+        - totalPatients
+        - aiAccuracyRate
+        - analysesToday
+        - conditionDistribution
+        - recentActivity
+
+    ConditionCount:
+      type: object
+      properties:
+        condition:
+          type: string
+        count:
+          type: integer
+        color:
+          type: string
+      required:
+        - condition
+        - count
+        - color
+
+    Analysis:
+      type: object
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: string
+        patientName:
+          type: string
+        age:
+          type: ["integer", "null"]
+        gender:
+          type: ["string", "null"]
+        condition:
+          type: string
+        conditionDetails:
+          type: ["string", "null"]
+        prediction:
+          type: string
+        riskLevel:
+          type: string
+        confidenceScore:
+          type: number
+        cancerType:
+          type: ["string", "null"]
+        abcdeScore:
+          type: ["string", "null"]
+        lesionArea:
+          type: ["string", "null"]
+        recommendations:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        segmentedImageUrl:
+          type: ["string", "null"]
+        heatmapImageUrl:
+          type: ["string", "null"]
+        riskFactors:
+          $ref: "#/components/schemas/RiskFactors"
+        riskProgressData:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskDataPoint"
+        explainableAiReasons:
+          type: array
+          items:
+            type: string
+        reportId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - patientId
+        - patientName
+        - prediction
+        - riskLevel
+        - confidenceScore
+        - createdAt
+
+    AnalysisInput:
+      type: object
+      properties:
+        patientName:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+        conditionDetails:
+          type: string
+        imageData:
+          type: string
+        riskFactors:
+          $ref: "#/components/schemas/RiskFactors"
+      required:
+        - patientName
+
+    ImageUploadInput:
+      type: object
+      properties:
+        patientName:
+          type: string
+        conditionDetails:
+          type: string
+        imageData:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+        riskFactors:
+          $ref: "#/components/schemas/RiskFactors"
+      required:
+        - patientName
+        - imageData
+
+    RiskFactors:
+      type: object
+      properties:
+        sunExposure:
+          type: ["string", "null"]
+        skinType:
+          type: ["string", "null"]
+        familyHistory:
+          type: ["boolean", "null"]
+        age:
+          type: ["integer", "null"]
+        immuneCondition:
+          type: ["boolean", "null"]
+      required: []
+
+    RiskDataPoint:
+      type: object
+      properties:
+        month:
+          type: string
+        riskScore:
+          type: number
+      required:
+        - month
+        - riskScore
+
+    AnalysisResult:
+      type: object
+      properties:
+        analysisId:
+          type: integer
+        prediction:
+          type: string
+        riskLevel:
+          type: string
+        confidenceScore:
+          type: number
+        cancerType:
+          type: string
+        abcdeScore:
+          type: string
+        lesionArea:
+          type: string
+        recommendations:
+          type: string
+        imageUrl:
+          type: string
+        segmentedImageUrl:
+          type: string
+        heatmapImageUrl:
+          type: string
+        riskProgressData:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskDataPoint"
+        explainableAiReasons:
+          type: array
+          items:
+            type: string
+        similarCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/SimilarCase"
+        reportId:
+          type: string
+        isHighRisk:
+          type: boolean
+      required:
+        - analysisId
+        - prediction
+        - riskLevel
+        - confidenceScore
+        - recommendations
+        - isHighRisk
+
+    SimilarCase:
+      type: object
+      properties:
+        id:
+          type: integer
+        patientName:
+          type: string
+        prediction:
+          type: string
+        riskLevel:
+          type: string
+        confidenceScore:
+          type: number
+        outcome:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        date:
+          type: string
+      required:
+        - id
+        - patientName
+        - prediction
+        - riskLevel
+        - confidenceScore
+        - date
+
+    ReportInfo:
+      type: object
+      properties:
+        reportId:
+          type: string
+        downloadUrl:
+          type: string
+        qrCodeData:
+          type: string
+        generatedAt:
+          type: string
+      required:
+        - reportId
+        - downloadUrl
+        - qrCodeData
+        - generatedAt
+
+    Doctor:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        specialty:
+          type: string
+        hospital:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        experience:
+          type: integer
+        rating:
+          type: number
+        phone:
+          type: string
+        email:
+          type: string
+        isOnline:
+          type: boolean
+        avatar:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - specialty
+        - hospital
+        - city
+        - country
+        - experience
+        - rating
+        - isOnline
+
+    ChatMessageInput:
+      type: object
+      properties:
+        message:
+          type: string
+        analysisId:
+          type: ["integer", "null"]
+      required:
+        - message
+
+    ChatResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        response:
+          type: string
+        timestamp:
+          type: string
+      required:
+        - id
+        - response
+        - timestamp
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        timestamp:
+          type: string
+      required:
+        - id
+        - role
+        - content
+        - timestamp

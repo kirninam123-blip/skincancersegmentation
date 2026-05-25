@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "8VEu04uBaincwWx7iRoRA"
+uri = "file://DermaAI-Python-Standalone.zip"
+type = "unspecified"
+title = "DermaAI Python Standalone Project (22.7 KB)"
