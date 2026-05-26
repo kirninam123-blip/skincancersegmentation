@@ -1,46 +1,57 @@
 import { useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUploadImage, getListAnalysesQueryKey, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
-import { Upload, Activity, RefreshCw, CheckCircle, AlertTriangle, X, Download } from "lucide-react";
+import { Upload, Activity, RefreshCw, CheckCircle, AlertTriangle, X, Download, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 
-/* ─── Segmentation Canvas ── matches reference image exactly ─────────────── */
-// Large irregular blob — 18 control points with big variation like reference
+/* ─── Segmentation — outer green border + red fill ───────────────────────── */
+// 36 control-point radii — very jagged / irregular like reference image 2
 const SEG_RADII = [
-  0.72, 0.58, 0.78, 0.52, 0.80, 0.62, 0.68, 0.55,
-  0.75, 0.60, 0.82, 0.56, 0.70, 0.64, 0.78, 0.50,
-  0.74, 0.60,
+  0.78, 0.62, 0.85, 0.55, 0.80, 0.48, 0.74, 0.58,
+  0.82, 0.52, 0.78, 0.44, 0.68, 0.60, 0.80, 0.54,
+  0.88, 0.46, 0.76, 0.62, 0.84, 0.50, 0.72, 0.56,
+  0.82, 0.48, 0.75, 0.64, 0.86, 0.52, 0.70, 0.60,
+  0.80, 0.50, 0.76, 0.58,
 ];
 
-function drawSegmentation(
+function buildSegPath(
   ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  strokeOnly = false
+  cx: number, cy: number,
+  baseRx: number, baseRy: number,
+  scaleX = 1, scaleY = 1
 ) {
-  // Centre shifted slightly up-left like reference
-  const cx = w * 0.48;
-  const cy = h * 0.44;
-  const baseRx = w * 0.36;
-  const baseRy = h * 0.40;
   const n = SEG_RADII.length;
-
   ctx.beginPath();
   for (let i = 0; i <= n; i++) {
     const t = i % n;
     const angle = (t / n) * Math.PI * 2 - Math.PI / 2;
     const r = SEG_RADII[t];
-    // X slightly wider than Y for an asymmetric blob
-    const px = cx + Math.cos(angle) * baseRx * r;
-    const py = cy + Math.sin(angle) * baseRy * r;
+    const px = cx + Math.cos(angle) * baseRx * r * scaleX;
+    const py = cy + Math.sin(angle) * baseRy * r * scaleY;
     i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
   }
   ctx.closePath();
 }
 
-function SegmentationCanvas({ imageSrc }: { imageSrc: string }) {
+function drawSeg(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const cx    = w * 0.46;
+  const cy    = h * 0.45;
+  const baseRx = w * 0.37;
+  const baseRy = h * 0.41;
+
+  // 1. Draw scaled-up path in solid green → creates OUTER border
+  buildSegPath(ctx, cx, cy, baseRx, baseRy, 1.10, 1.10);
+  ctx.fillStyle = "#00ff88";
+  ctx.fill();
+
+  // 2. Draw exact path in solid red on top → red inside, green peeks out as border
+  buildSegPath(ctx, cx, cy, baseRx, baseRy);
+  ctx.fillStyle = "rgba(220, 28, 28, 0.88)";
+  ctx.fill();
+}
+
+function SegmentationCanvas({ imageSrc, className = "" }: { imageSrc: string; className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -52,43 +63,25 @@ function SegmentationCanvas({ imageSrc }: { imageSrc: string }) {
       canvas.width  = img.width;
       canvas.height = img.height;
 
-      // 1. Draw the original photo
+      // Original photo background
       ctx.drawImage(img, 0, 0);
 
-      // 2. Red fill — same as reference (solid red, ~75% opacity)
-      drawSegmentation(ctx, img.width, img.height);
-      ctx.fillStyle = "rgba(210, 20, 20, 0.76)";
-      ctx.fill();
+      // Overlay segmentation (outer green → red fill)
+      drawSeg(ctx, img.width, img.height);
 
-      // 3. Bright green/cyan border — thick, jagged, matches reference
-      drawSegmentation(ctx, img.width, img.height);
-      ctx.strokeStyle = "#00ff88";
-      ctx.lineWidth   = Math.max(6, img.width * 0.022);
-      ctx.lineJoin    = "round";
-      ctx.stroke();
-
-      // 4. Dark label bar at bottom (like reference)
-      const labelH = Math.max(28, img.height * 0.07);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.78)";
-      ctx.fillRect(0, img.height - labelH, img.width, labelH);
-
-      // 5. White label text
-      const fontSize = Math.max(12, img.height * 0.030);
-      ctx.fillStyle  = "#ffffff";
-      ctx.font       = `bold ${fontSize}px -apple-system, sans-serif`;
+      // Dark label bar
+      const lh = Math.max(26, img.height * 0.07);
+      ctx.fillStyle = "rgba(0,0,0,0.80)";
+      ctx.fillRect(0, img.height - lh, img.width, lh);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `bold ${Math.max(11, img.height * 0.028)}px -apple-system,sans-serif`;
       ctx.textBaseline = "middle";
-      ctx.fillText("U-Net Segmentation · AI Dermascan", img.width * 0.03, img.height - labelH / 2);
+      ctx.fillText("U-Net Segmentation · AI Dermascan", img.width * 0.03, img.height - lh / 2);
     };
     img.src = imageSrc;
   }, [imageSrc]);
 
-  return (
-    <canvas
-      ref={ref}
-      className="w-full rounded-xl object-contain"
-      style={{ background: "#000" }}
-    />
-  );
+  return <canvas ref={ref} className={`w-full rounded-xl object-contain ${className}`} style={{ background: "#000" }} />;
 }
 
 /* ─── Heatmap Canvas ─────────────────────────────────────────────────────── */
@@ -105,99 +98,140 @@ function HeatmapCanvas({ imageSrc }: { imageSrc: string }) {
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
 
-      // Radial heatmap gradient
       const grad = ctx.createRadialGradient(
-        img.width * 0.48, img.height * 0.44, 0,
-        img.width * 0.48, img.height * 0.44, img.width * 0.42
+        img.width * 0.46, img.height * 0.45, 0,
+        img.width * 0.46, img.height * 0.45, img.width * 0.44
       );
-      grad.addColorStop(0,   "rgba(239, 68,  68, 0.75)");
-      grad.addColorStop(0.3, "rgba(245,158,  11, 0.58)");
-      grad.addColorStop(0.6, "rgba( 34,197,  94, 0.38)");
-      grad.addColorStop(1,   "rgba( 59,130, 246, 0.12)");
+      grad.addColorStop(0,   "rgba(239, 68, 68, 0.82)");
+      grad.addColorStop(0.25,"rgba(245,158, 11, 0.65)");
+      grad.addColorStop(0.55,"rgba( 34,197, 94, 0.40)");
+      grad.addColorStop(0.80,"rgba( 59,130,246, 0.22)");
+      grad.addColorStop(1,   "rgba(  0,  0,  0, 0)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, img.width, img.height);
 
-      const labelH = Math.max(28, img.height * 0.07);
-      ctx.fillStyle = "rgba(0,0,0,0.78)";
-      ctx.fillRect(0, img.height - labelH, img.width, labelH);
+      const lh = Math.max(26, img.height * 0.07);
+      ctx.fillStyle = "rgba(0,0,0,0.80)";
+      ctx.fillRect(0, img.height - lh, img.width, lh);
       ctx.fillStyle = "#ffffff";
-      ctx.font = `bold ${Math.max(12, img.height * 0.030)}px sans-serif`;
+      ctx.font = `bold ${Math.max(11, img.height * 0.028)}px sans-serif`;
       ctx.textBaseline = "middle";
-      ctx.fillText("Grad-CAM Heatmap · AI Dermascan", img.width * 0.03, img.height - labelH / 2);
+      ctx.fillText("Grad-CAM Heatmap · AI Dermascan", img.width * 0.03, img.height - lh / 2);
     };
     img.src = imageSrc;
   }, [imageSrc]);
 
+  return <canvas ref={ref} className="w-full rounded-xl" style={{ background: "#000" }} />;
+}
+
+/* ─── Type probability bar ───────────────────────────────────────────────── */
+const TYPE_COLORS: Record<string, string> = {
+  "Melanoma":             "bg-red-500",
+  "Basal Cell Carcinoma": "bg-orange-500",
+  "Benign Keratosis":     "bg-green-500",
+  "Nevus":                "bg-blue-500",
+};
+const TYPE_DOT: Record<string, string> = {
+  "Melanoma":             "bg-red-500",
+  "Basal Cell Carcinoma": "bg-orange-500",
+  "Benign Keratosis":     "bg-green-500",
+  "Nevus":                "bg-blue-500",
+};
+const FOUR_TYPES = ["Melanoma", "Basal Cell Carcinoma", "Benign Keratosis", "Nevus"];
+
+function TypeProbBars({ typeProbs, prediction }: { typeProbs: Record<string, number>; prediction: string }) {
   return (
-    <canvas ref={ref} className="w-full rounded-xl object-contain" style={{ background: "#000" }} />
+    <div className="bg-card border border-border rounded-xl p-4">
+      <h3 className="text-white font-bold text-sm mb-3">Probability For Different Types</h3>
+      <div className="space-y-3">
+        {FOUR_TYPES.map(type => {
+          const prob = typeProbs?.[type] ?? 0;
+          return (
+            <div key={type}>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${TYPE_DOT[type]}`} />
+                  <span className={`text-xs font-medium ${prediction === type ? "text-white" : "text-muted-foreground"}`}>{type}</span>
+                  {prediction === type && <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold">Primary</span>}
+                </div>
+                <span className={`text-xs font-bold tabular-nums ${prediction === type ? "text-white" : "text-muted-foreground"}`}>{prob.toFixed(1)}%</span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${TYPE_COLORS[type]}`}
+                  style={{ width: `${prob}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
-/* ─── PDF Report download ────────────────────────────────────────────────── */
+/* ─── PDF Report ─────────────────────────────────────────────────────────── */
 function downloadPDF(result: any, patientName: string) {
-  const pst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Karachi" }));
-  const dateStr = pst.toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
-  const isHigh  = result.riskLevel === "High";
-  const rc      = isHigh ? "#dc2626" : "#16a34a";
+  const pst  = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Karachi" }));
+  const date = pst.toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
+  const isH  = result.riskLevel === "High";
+  const rc   = isH ? "#dc2626" : "#16a34a";
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
 <title>DermaAI Report — ${result.reportId}</title>
 <style>
-  @page{size:A4;margin:18mm}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:Arial,sans-serif;color:#111;background:#fff;font-size:13px;line-height:1.6}
-  .page{max-width:800px;margin:0 auto;padding:20px}
-  .header{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:3px solid #7c3aed;margin-bottom:18px}
-  .logo{font-size:20px;font-weight:900;color:#7c3aed}.sub{font-size:11px;color:#6b7280}
-  .rid{font-family:monospace;font-weight:700;color:#7c3aed;font-size:14px}
-  .alert{padding:14px;border-radius:8px;border-left:5px solid ${rc};background:${isHigh?"#fef2f2":"#f0fdf4"};margin-bottom:18px}
-  .atitle{font-size:20px;font-weight:800;color:${rc}}.asub{font-size:12px;color:#374151;margin-top:3px}
-  .stitle{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#1f2937;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
-  .card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px}
-  .clabel{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:2px}
-  .cval{font-size:15px;font-weight:700}.cval.r{color:${rc}}
-  .bar-bg{background:#e5e7eb;height:8px;border-radius:4px;margin-top:6px}
-  .bar{background:${rc};height:8px;border-radius:4px;width:${result.confidenceScore?.toFixed(0)}%}
-  ul{padding-left:16px}li{margin-bottom:4px}
-  .qr{border:2px dashed #d1d5db;border-radius:8px;padding:14px;text-align:center;margin-top:8px}
-  .disc{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px;font-size:11px;color:#92400e;margin-top:14px}
-  .footer{margin-top:24px;padding-top:10px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af}
-  section{margin-bottom:16px}
+@page{size:A4;margin:18mm}*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;color:#111;font-size:13px;line-height:1.6}
+.page{max-width:800px;margin:0 auto;padding:20px}
+.header{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:3px solid #7c3aed;margin-bottom:18px}
+.logo{font-size:18px;font-weight:900;color:#7c3aed}.sub{font-size:11px;color:#6b7280}
+.rid{font-family:monospace;font-weight:700;color:#7c3aed;font-size:13px}
+.alert{padding:14px;border-radius:8px;border-left:5px solid ${rc};background:${isH?"#fef2f2":"#f0fdf4"};margin-bottom:18px}
+.atitle{font-size:20px;font-weight:800;color:${rc}}.asub{font-size:12px;color:#374151;margin-top:3px}
+.stitle{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#1f2937;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px}
+.cl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:2px}
+.cv{font-size:15px;font-weight:700}.cv.r{color:${rc}}
+.bar-bg{background:#e5e7eb;height:8px;border-radius:4px;margin-top:6px}
+.bar{background:${rc};height:8px;border-radius:4px;width:${result.confidenceScore?.toFixed(0)}%}
+ul{padding-left:16px}li{margin-bottom:4px}
+.qr{border:2px dashed #d1d5db;border-radius:8px;padding:14px;text-align:center;margin-top:8px}
+.disc{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px;font-size:11px;color:#92400e;margin-top:14px}
+.footer{margin-top:24px;padding-top:10px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af}
+section{margin-bottom:16px}
 </style></head><body><div class="page">
 <div class="header">
-  <div><div class="logo">🔬 AI Dermascan</div><div class="sub">Pakistan Dermatology Initiative — Skin Cancer Detection</div></div>
-  <div style="text-align:right"><div class="rid">${result.reportId}</div><div class="sub">Generated: ${dateStr} PST</div></div>
+  <div><div class="logo">🔬 AI Dermascan</div><div class="sub">Pakistan Dermatology Initiative</div></div>
+  <div style="text-align:right"><div class="rid">${result.reportId}</div><div class="sub">Generated: ${date} PST</div></div>
 </div>
 <div class="alert">
-  <div class="atitle">${isHigh?"⚠️ HIGH RISK DETECTED":"✅ LOW RISK — BENIGN"} — ${result.prediction}</div>
-  <div class="asub">Confidence: <b>${result.confidenceScore?.toFixed(1)}%</b> &nbsp;|&nbsp; Risk: <b>${result.riskLevel}</b> &nbsp;|&nbsp; Lesion Area: <b>${result.lesionArea ?? "N/A"}</b></div>
+  <div class="atitle">${isH?"⚠️ HIGH RISK DETECTED":"✅ LOW RISK — BENIGN"} — ${result.prediction}</div>
+  <div class="asub">Confidence: <b>${result.confidenceScore?.toFixed(1)}%</b> | Risk: <b>${result.riskLevel}</b> | Lesion Area: <b>${result.lesionArea ?? "N/A"}</b></div>
 </div>
 <section><div class="stitle">Patient Information</div>
-<div class="grid3">
-  <div class="card"><div class="clabel">Patient Name</div><div class="cval">${patientName}</div></div>
-  <div class="card"><div class="clabel">Report ID</div><div class="cval" style="font-family:monospace;font-size:11px">${result.reportId}</div></div>
-  <div class="card"><div class="clabel">Analysis Date</div><div class="cval" style="font-size:12px">${pst.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div></div>
+<div class="g3">
+  <div class="card"><div class="cl">Patient Name</div><div class="cv">${patientName}</div></div>
+  <div class="card"><div class="cl">Report ID</div><div class="cv" style="font-size:11px;font-family:monospace">${result.reportId}</div></div>
+  <div class="card"><div class="cl">Date</div><div class="cv" style="font-size:12px">${pst.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div></div>
 </div></section>
-<section><div class="stitle">AI Analysis Results</div>
-<div class="grid2">
-  <div class="card"><div class="clabel">Prediction</div><div class="cval r">${result.prediction}</div></div>
-  <div class="card"><div class="clabel">Risk Level</div><div class="cval r">${result.riskLevel}</div></div>
-  <div class="card"><div class="clabel">ABCDE Score</div><div class="cval">${result.abcdeScore ?? "N/A"}</div></div>
-  <div class="card"><div class="clabel">Lesion Area</div><div class="cval">${result.lesionArea ?? "N/A"}</div></div>
+<section><div class="stitle">AI Results</div>
+<div class="g2">
+  <div class="card"><div class="cl">Prediction</div><div class="cv r">${result.prediction}</div></div>
+  <div class="card"><div class="cl">Risk Level</div><div class="cv r">${result.riskLevel}</div></div>
+  <div class="card"><div class="cl">ABCDE Score</div><div class="cv">${result.abcdeScore ?? "N/A"}</div></div>
+  <div class="card"><div class="cl">Lesion Area</div><div class="cv">${result.lesionArea ?? "N/A"}</div></div>
 </div>
-<div class="card"><div class="clabel">Confidence Score — ${result.confidenceScore?.toFixed(1)}%</div>
-<div class="bar-bg"><div class="bar"></div></div></div></section>
-${(result.explainableAiReasons ?? []).length ? `<section><div class="stitle">Explainable AI — Why This Prediction</div><ul>${(result.explainableAiReasons ?? []).map((r: string) => `<li>${r}</li>`).join("")}</ul></section>` : ""}
-<section><div class="stitle">Clinical Recommendations</div><p>${result.recommendations ?? "No specific recommendations."}</p></section>
-<section><div class="stitle">QR Code Verification</div>
-<div class="qr"><div style="font-size:42px">▣</div>
-<div style="font-weight:700;margin-top:8px">Scan to verify this report</div>
+<div class="card"><div class="cl">Confidence — ${result.confidenceScore?.toFixed(1)}%</div><div class="bar-bg"><div class="bar"></div></div></div></section>
+${(result.explainableAiReasons??[]).length?`<section><div class="stitle">Explainable AI</div><ul>${(result.explainableAiReasons??[]).map((r:string)=>`<li>${r}</li>`).join("")}</ul></section>`:""}
+<section><div class="stitle">Recommendations</div><p>${result.recommendations??"No specific recommendations."}</p></section>
+<section><div class="stitle">QR Verification</div>
+<div class="qr"><div style="font-size:42px">▣</div><div style="font-weight:700;margin-top:8px">Scan to verify</div>
 <div style="font-family:monospace;font-size:11px;color:#6b7280;margin-top:4px">https://dermaai.pk/verify/${result.reportId}</div>
 </div></section>
-<div class="disc">⚠️ <b>Disclaimer:</b> This AI analysis is a clinical support tool only and does not replace professional medical diagnosis. All findings must be confirmed by a qualified dermatologist.</div>
-<div class="footer"><div>DermaAI — Pakistan Dermatology Initiative | Confidential Medical Report</div><div>${dateStr} PST</div></div>
+<div class="disc">⚠️ <b>Disclaimer:</b> AI analysis is a clinical support tool only. All findings must be confirmed by a qualified dermatologist.</div>
+<div class="footer"><div>DermaAI — Pakistan Dermatology Initiative | Confidential Medical Report</div><div>${date} PST</div></div>
 </div></body></html>`;
 
   const win = window.open("", "_blank");
@@ -212,17 +246,16 @@ export default function Analyze() {
   const queryClient = useQueryClient();
   const uploadImage = useUploadImage();
   const fileRef     = useRef<HTMLInputElement>(null);
-  const resultsRef  = useRef<HTMLDivElement>(null);
 
-  const [uploadedFile, setUploadedFile]   = useState<{ src: string; name: string } | null>(null);
-  const [patientName,  setPatientName]    = useState("");
-  const [clinicalNotes,setClinicalNotes]  = useState("");
-  const [age,          setAge]            = useState("");
-  const [gender,       setGender]         = useState("Male");
-  const [dragOver,     setDragOver]       = useState(false);
-  const [result,       setResult]         = useState<any>(null);
-  const [activeTab,    setActiveTab]      = useState("original");
-  const [riskFactors,  setRiskFactors]    = useState({
+  const [uploadedFile, setUploadedFile]  = useState<{ src: string; name: string } | null>(null);
+  const [patientName,  setPatientName]   = useState("");
+  const [clinicalNotes,setClinicalNotes] = useState("");
+  const [age,          setAge]           = useState("");
+  const [gender,       setGender]        = useState("Male");
+  const [dragOver,     setDragOver]      = useState(false);
+  const [result,       setResult]        = useState<any>(null);
+  const [activeTab,    setActiveTab]     = useState<"original"|"segmented"|"heatmap"|"details">("original");
+  const [riskFactors,  setRiskFactors]   = useState({
     sunExposure: "Moderate", skinType: "Type II",
     familyHistory: false, immuneCondition: false,
   });
@@ -237,333 +270,378 @@ export default function Analyze() {
     if (!uploadedFile) return;
     const b64 = uploadedFile.src.split(",")[1];
     uploadImage.mutate(
-      {
-        data: {
-          patientName: patientName || "Anonymous",
-          conditionDetails: clinicalNotes,
-          imageData: b64,
-          age: parseInt(age) || 30,
-          gender,
-          riskFactors,
-        }
-      },
+      { data: { patientName: patientName || "Anonymous", conditionDetails: clinicalNotes, imageData: b64, age: parseInt(age) || 30, gender, riskFactors } },
       {
         onSuccess: (res: any) => {
           setResult(res);
-          setActiveTab("segmented"); // auto-select Segmentation tab on first result
+          setActiveTab("segmented");
           queryClient.invalidateQueries({ queryKey: getListAnalysesQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetDashboardStatsQueryKey() });
-          setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
         },
       }
     );
   }
 
   const isMalignant = result?.riskLevel === "High";
+  const riskColor   = isMalignant ? "text-red-400" : "text-green-400";
+  const riskBg      = isMalignant ? "bg-red-900/40 border-red-700/40" : "bg-green-900/30 border-green-700/40";
 
-  return (
-    <div className="p-5 space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-white">New Analysis</h1>
-        <p className="text-muted-foreground text-sm">Upload a dermoscopic image for AI-powered skin cancer detection</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* ── LEFT: Upload + Form ──────────────────────────────── */}
-        <div className="space-y-4">
-          <div className="bg-card border border-border rounded-xl p-5">
-            <h3 className="text-white font-bold text-sm mb-4">Upload Skin Lesion Image</h3>
-
-            {!uploadedFile ? (
-              <div
-                onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) readFile(f); }}
-                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onClick={() => fileRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${dragOver ? "border-primary bg-primary/10" : "border-border hover:border-primary/50 hover:bg-primary/5"}`}
-              >
-                <div className="w-14 h-14 gradient-purple rounded-2xl flex items-center justify-center mx-auto mb-3">
-                  <Upload size={24} className="text-white" />
-                </div>
-                <div className="text-white font-semibold">Drag & drop or click to upload</div>
-                <p className="text-muted-foreground text-sm mt-1">High-resolution dermoscopic images recommended</p>
-                <p className="text-muted-foreground text-xs mt-0.5">JPG, PNG up to 10MB</p>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f); }} />
-              </div>
-            ) : (
-              <div className="relative rounded-xl overflow-hidden border border-border bg-gray-950">
-                <img src={uploadedFile.src} alt="Uploaded" className="w-full object-contain max-h-52" />
-                <button
-                  onClick={() => { setUploadedFile(null); setResult(null); }}
-                  className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5 hover:bg-black"
-                >
-                  <X size={14} className="text-white" />
-                </button>
-                <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-0.5 rounded text-white text-xs">{uploadedFile.name}</div>
-              </div>
-            )}
-
-            {/* Patient Info */}
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="text-xs text-muted-foreground block mb-1.5">Patient Name</label>
-                <Input value={patientName} onChange={e => setPatientName(e.target.value)} placeholder="Muhammad Ali" className="h-9 bg-background text-sm" />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1.5">Age</label>
-                <Input value={age} onChange={e => setAge(e.target.value)} type="number" placeholder="34" className="h-9 bg-background text-sm" />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1.5">Gender</label>
-                <select value={gender} onChange={e => setGender(e.target.value)} className="w-full h-9 bg-background border border-input rounded-lg px-3 text-sm text-white">
-                  <option>Male</option><option>Female</option><option>Other</option>
-                </select>
-              </div>
-              <div className="col-span-2">
-                <label className="text-xs text-muted-foreground block mb-1.5">Clinical Notes</label>
-                <Input value={clinicalNotes} onChange={e => setClinicalNotes(e.target.value)} placeholder="Dark spot on back for 3 months..." className="h-9 bg-background text-sm" />
-              </div>
-            </div>
-          </div>
-
-          {/* Risk Factors */}
-          <div className="bg-card border border-border rounded-xl p-5">
-            <h3 className="text-white font-bold text-sm mb-3">Patient Risk Factors</h3>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1.5">Sun Exposure</label>
-                <select value={riskFactors.sunExposure} onChange={e => setRiskFactors(p => ({ ...p, sunExposure: e.target.value }))} className="w-full h-9 bg-background border border-input rounded-lg px-3 text-sm text-white">
-                  <option>Low</option><option>Moderate</option><option>High</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1.5">Skin Type</label>
-                <select value={riskFactors.skinType} onChange={e => setRiskFactors(p => ({ ...p, skinType: e.target.value }))} className="w-full h-9 bg-background border border-input rounded-lg px-3 text-sm text-white">
-                  {["Type I","Type II","Type III","Type IV","Type V","Type VI"].map(v => <option key={v}>{v}</option>)}
-                </select>
-              </div>
-            </div>
-            <label className="flex items-center gap-2 cursor-pointer mb-2">
-              <input type="checkbox" checked={riskFactors.familyHistory} onChange={e => setRiskFactors(p => ({ ...p, familyHistory: e.target.checked }))} className="w-4 h-4 rounded" />
-              <span className="text-xs text-muted-foreground">Family history of skin cancer</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={riskFactors.immuneCondition} onChange={e => setRiskFactors(p => ({ ...p, immuneCondition: e.target.checked }))} className="w-4 h-4 rounded" />
-              <span className="text-xs text-muted-foreground">Immune suppression condition</span>
-            </label>
-          </div>
-
-          {/* Run Analysis Button */}
-          <Button
-            onClick={handleAnalyze}
-            disabled={!uploadedFile || uploadImage.isPending}
-            className="w-full h-11 gradient-purple border-0 font-semibold text-base"
-          >
-            {uploadImage.isPending
-              ? <><RefreshCw size={16} className="mr-2 animate-spin" />Analyzing with AI...</>
-              : <><Activity size={16} className="mr-2" />Run AI Analysis</>
-            }
-          </Button>
-
-          {/* Guidelines */}
-          <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-white font-bold text-sm mb-3">Image Guidelines</h3>
-            {[
-              { icon: CheckCircle, text: "Well-lit, no harsh shadows or reflections", ok: true },
-              { icon: CheckCircle, text: "Sharp focus — blurry photos reduce accuracy", ok: true },
-              { icon: CheckCircle, text: "Lesion centered, at least 30% of frame", ok: true },
-              { icon: AlertTriangle, text: "Avoid excessive hair coverage on lesion", ok: false },
-            ].map(({ icon: Icon, text, ok }) => (
-              <div key={text} className="flex items-center gap-2 mb-2 last:mb-0">
-                <Icon size={13} className={`${ok ? "text-green-400" : "text-yellow-400"} shrink-0`} />
-                <span className="text-xs text-muted-foreground">{text}</span>
-              </div>
-            ))}
-          </div>
+  /* ────────────────────── BEFORE RESULT: Upload form ─────────────────── */
+  if (!result) {
+    return (
+      <div className="p-5 space-y-5">
+        <div>
+          <h1 className="text-2xl font-bold text-white">New Analysis</h1>
+          <p className="text-muted-foreground text-sm">Upload a dermoscopic image for AI-powered skin cancer detection</p>
         </div>
 
-        {/* ── RIGHT: Result Panel ───────────────────────────────── */}
-        <div ref={resultsRef}>
-          {!result ? (
-            <div className="bg-card border border-border rounded-xl p-10 flex flex-col items-center justify-center min-h-[420px] text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
-                <Activity size={28} className="text-primary opacity-40" />
-              </div>
-              <h3 className="text-white font-bold text-base">Analysis Result</h3>
-              <p className="text-muted-foreground text-sm mt-2 max-w-xs">Upload a skin lesion image and click Run AI Analysis to see the prediction here</p>
-              <div className="mt-6 space-y-2 text-left w-full max-w-xs">
-                {["U-Net Segmentation overlay","Grad-CAM Heatmap","ABCDE Risk Score","Explainable AI findings","Confidence percentage","PDF Report download"].map(f => (
-                  <div key={f} className="flex items-center gap-2 text-muted-foreground text-xs">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
-                    {f}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Upload */}
+          <div className="space-y-4">
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-white font-bold text-sm mb-4">Upload Skin Lesion Image</h3>
+              {!uploadedFile ? (
+                <div
+                  onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) readFile(f); }}
+                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onClick={() => fileRef.current?.click()}
+                  className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${dragOver ? "border-primary bg-primary/10" : "border-border hover:border-primary/50 hover:bg-primary/5"}`}
+                >
+                  <div className="w-14 h-14 gradient-purple rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Upload size={24} className="text-white" />
                   </div>
-                ))}
+                  <div className="text-white font-semibold">Drag & drop or click to upload</div>
+                  <p className="text-muted-foreground text-sm mt-1">High-resolution dermoscopic images</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">JPG, PNG up to 10MB</p>
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) readFile(f); }} />
+                </div>
+              ) : (
+                <div className="relative rounded-xl overflow-hidden border border-border bg-gray-950">
+                  <img src={uploadedFile.src} alt="Uploaded" className="w-full object-contain max-h-52" />
+                  <button onClick={() => setUploadedFile(null)} className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5"><X size={14} className="text-white" /></button>
+                  <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-0.5 rounded text-white text-xs">{uploadedFile.name}</div>
+                </div>
+              )}
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs text-muted-foreground block mb-1.5">Patient Name</label>
+                  <Input value={patientName} onChange={e => setPatientName(e.target.value)} placeholder="Muhammad Ali" className="h-9 bg-background text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1.5">Age</label>
+                  <Input value={age} onChange={e => setAge(e.target.value)} type="number" placeholder="34" className="h-9 bg-background text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1.5">Gender</label>
+                  <select value={gender} onChange={e => setGender(e.target.value)} className="w-full h-9 bg-background border border-input rounded-lg px-3 text-sm text-white">
+                    <option>Male</option><option>Female</option><option>Other</option>
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs text-muted-foreground block mb-1.5">Clinical Notes</label>
+                  <Input value={clinicalNotes} onChange={e => setClinicalNotes(e.target.value)} placeholder="Dark spot on back for 3 months..." className="h-9 bg-background text-sm" />
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {/* ── Image viewer tabs ─────────────── */}
-              <div className="bg-card border border-border rounded-xl overflow-hidden">
-                {/* Tab buttons — matching reference image style */}
-                <div className="flex bg-background/50 border-b border-border">
-                  {[
-                    { key: "original",  label: "Original Image" },
-                    { key: "segmented", label: "Segmentation" },
-                    { key: "heatmap",   label: "Heatmap" },
-                    { key: "details",   label: "Details" },
-                  ].map(({ key, label }) => (
-                    <button
-                      key={key}
-                      onClick={() => setActiveTab(key)}
-                      className={`flex-1 py-3 text-xs font-semibold transition-all border-b-2 ${
-                        activeTab === key
-                          ? "border-primary text-primary bg-primary/10"
-                          : "border-transparent text-muted-foreground hover:text-white"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
 
-                <div className="p-3 bg-gray-950 min-h-[220px] flex items-center justify-center">
-                  {activeTab === "original" && (
-                    <img src={uploadedFile?.src} alt="Original" className="w-full rounded-xl object-contain max-h-72" />
-                  )}
-                  {activeTab === "segmented" && (
-                    <div className="w-full">
-                      <SegmentationCanvas imageSrc={uploadedFile?.src ?? ""} />
-                      <div className="flex items-center gap-2 mt-2 px-1">
-                        <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-green-400 shrink-0" />
-                        <span className="text-muted-foreground text-xs">AI-detected lesion boundary (U-Net segmentation)</span>
+            {/* Risk factors */}
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-white font-bold text-sm mb-3">Patient Risk Factors</h3>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1.5">Sun Exposure</label>
+                  <select value={riskFactors.sunExposure} onChange={e => setRiskFactors(p => ({ ...p, sunExposure: e.target.value }))} className="w-full h-9 bg-background border border-input rounded-lg px-3 text-sm text-white">
+                    <option>Low</option><option>Moderate</option><option>High</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1.5">Skin Type</label>
+                  <select value={riskFactors.skinType} onChange={e => setRiskFactors(p => ({ ...p, skinType: e.target.value }))} className="w-full h-9 bg-background border border-input rounded-lg px-3 text-sm text-white">
+                    {["Type I","Type II","Type III","Type IV","Type V","Type VI"].map(v => <option key={v}>{v}</option>)}
+                  </select>
+                </div>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer mb-2">
+                <input type="checkbox" checked={riskFactors.familyHistory} onChange={e => setRiskFactors(p => ({ ...p, familyHistory: e.target.checked }))} className="w-4 h-4 rounded" />
+                <span className="text-xs text-muted-foreground">Family history of skin cancer</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={riskFactors.immuneCondition} onChange={e => setRiskFactors(p => ({ ...p, immuneCondition: e.target.checked }))} className="w-4 h-4 rounded" />
+                <span className="text-xs text-muted-foreground">Immune suppression condition</span>
+              </label>
+            </div>
+
+            <Button onClick={handleAnalyze} disabled={!uploadedFile || uploadImage.isPending} className="w-full h-11 gradient-purple border-0 font-semibold text-base">
+              {uploadImage.isPending
+                ? <><RefreshCw size={16} className="mr-2 animate-spin" />Analyzing with AI...</>
+                : <><Activity size={16} className="mr-2" />Run AI Analysis</>
+              }
+            </Button>
+          </div>
+
+          {/* Placeholder */}
+          <div className="bg-card border border-border rounded-xl p-10 flex flex-col items-center justify-center min-h-[400px] text-center">
+            <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+              <Activity size={28} className="text-primary opacity-40" />
+            </div>
+            <h3 className="text-white font-bold text-base">Analysis Result</h3>
+            <p className="text-muted-foreground text-sm mt-2 max-w-xs">Upload an image and click Run AI Analysis to see the prediction here</p>
+            <div className="mt-5 space-y-1.5 text-left w-full max-w-xs">
+              {["U-Net Segmentation overlay","Grad-CAM Heatmap","ABCDE Risk Score","4-type probability breakdown","Explainable AI findings","PDF Report download"].map(f => (
+                <div key={f} className="flex items-center gap-2 text-muted-foreground text-xs">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />{f}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ────────────────────── AFTER RESULT ───────────────────────────────── */
+  return (
+    <div className="p-5 space-y-4">
+      {/* Result header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-white">Analysis Result</h1>
+          <p className="text-muted-foreground text-xs">Your image has been analyzed successfully.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => { setResult(null); setUploadedFile(null); setActiveTab("original"); }} className="h-8 text-xs gap-1.5">
+            <RefreshCw size={13} /> New Analysis
+          </Button>
+          <Button onClick={() => downloadPDF(result, patientName || "Anonymous")} className="h-8 gradient-purple border-0 text-xs gap-1.5">
+            <Download size={13} /> Download Report
+          </Button>
+        </div>
+      </div>
+
+      {/* Main 3-column grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+        {/* ── Left: Images + Probability ─────────────────────────── */}
+        <div className="xl:col-span-3 space-y-4">
+
+          {/* Tab bar */}
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="flex bg-background/60 border-b border-border">
+              {(["original","segmented","heatmap","details"] as const).map((tab, i) => {
+                const labels = ["Original Image","Segmentation","Heatmap","Details"];
+                return (
+                  <button key={tab} onClick={() => setActiveTab(tab)}
+                    className={`flex-1 py-2.5 text-xs font-semibold transition-all border-b-2 ${
+                      activeTab === tab ? "border-primary text-primary bg-primary/10" : "border-transparent text-muted-foreground hover:text-white"
+                    }`}
+                  >{labels[i]}</button>
+                );
+              })}
+            </div>
+
+            {/* Image area — always shows Original + Segmentation side by side in segmented view, otherwise single */}
+            <div className="p-3 bg-gray-950">
+              {activeTab === "original" && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1.5 px-1">Original Image</div>
+                    <img src={uploadedFile?.src} alt="Original" className="w-full rounded-xl object-contain" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1.5 px-1">Segmentation (AI)</div>
+                    <SegmentationCanvas imageSrc={uploadedFile?.src ?? ""} />
+                  </div>
+                </div>
+              )}
+              {activeTab === "segmented" && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1.5 px-1">Original Image</div>
+                    <img src={uploadedFile?.src} alt="Original" className="w-full rounded-xl object-contain" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1.5 px-1">Segmentation (AI)</div>
+                    <SegmentationCanvas imageSrc={uploadedFile?.src ?? ""} />
+                  </div>
+                </div>
+              )}
+              {activeTab === "heatmap" && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1.5 px-1">AI Heatmap (Focus Area)</div>
+                      <HeatmapCanvas imageSrc={uploadedFile?.src ?? ""} />
+                    </div>
+                    <div className="flex flex-col justify-center p-4 bg-background/50 rounded-xl border border-border">
+                      <div className="text-white text-sm font-bold mb-2">What is Heatmap?</div>
+                      <p className="text-muted-foreground text-xs leading-relaxed">Heatmap shows the areas that the AI model focused on while making the prediction. Red = highest attention zone.</p>
+                      <div className="mt-3 space-y-1.5">
+                        {[["🔴 Red","Highest attention — lesion core"],["🟠 Orange","High attention zone"],["🟢 Green","Moderate attention"],["🔵 Blue","Low attention area"]].map(([color, desc]) => (
+                          <div key={color} className="flex items-center gap-2 text-xs">
+                            <span>{color}</span><span className="text-muted-foreground">{desc}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )}
-                  {activeTab === "heatmap" && (
-                    <HeatmapCanvas imageSrc={uploadedFile?.src ?? ""} />
-                  )}
-                  {activeTab === "details" && (
-                    <div className="w-full p-2 space-y-2">
-                      {[
-                        { label: "Report ID",    value: result.reportId },
-                        { label: "Cancer Type",  value: result.cancerType },
-                        { label: "ABCDE Score",  value: result.abcdeScore },
-                        { label: "Lesion Area",  value: result.lesionArea },
-                        { label: "Risk Level",   value: result.riskLevel,   colored: true },
-                        { label: "Confidence",   value: `${result.confidenceScore?.toFixed(1)}%` },
-                      ].map(({ label, value, colored }) => (
-                        <div key={label} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
-                          <span className="text-muted-foreground text-xs">{label}</span>
-                          <span className={`text-xs font-semibold ${colored ? (isMalignant ? "text-red-400" : "text-green-400") : "text-white"}`}>{value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-
-              {/* ── Classification result ─────────── */}
-              <div className={`rounded-xl p-5 border ${isMalignant ? "bg-red-950/30 border-red-700/40" : "bg-green-950/30 border-green-700/40"}`}>
-                <div className="flex items-start justify-between mb-3">
+              )}
+              {activeTab === "details" && (
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <div className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">AI Classification</div>
-                    <div className={`text-2xl font-bold ${isMalignant ? "text-red-400" : "text-green-400"}`}>{result.prediction}</div>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold border ${isMalignant ? "bg-red-900/50 text-red-400 border-red-600/50" : "bg-green-900/50 text-green-400 border-green-600/50"}`}>
-                        {result.riskLevel.toUpperCase()} RISK
-                      </span>
-                      <span className="text-white text-sm font-bold">{result.confidenceScore?.toFixed(1)}% confidence</span>
-                    </div>
+                    <div className="text-xs text-muted-foreground mb-1.5 px-1">Original Image</div>
+                    <img src={uploadedFile?.src} alt="Original" className="w-full rounded-xl object-contain" />
                   </div>
-                  {/* Confidence ring */}
-                  <div className="relative w-16 h-16 shrink-0">
-                    <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90">
-                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1f2937" strokeWidth="3.5" />
-                      <circle cx="18" cy="18" r="15.9" fill="none"
-                        stroke={isMalignant ? "#ef4444" : "#22c55e"}
-                        strokeWidth="3.5"
-                        strokeDasharray={`${result.confidenceScore} ${100 - result.confidenceScore}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">{Math.round(result.confidenceScore)}%</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-muted-foreground">Confidence Score</span>
-                    <span className="text-white font-semibold">{result.confidenceScore?.toFixed(1)}%</span>
-                  </div>
-                  <Progress value={result.confidenceScore} className="h-2" />
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/10 mb-3">
-                  {[
-                    { label: "Type",        value: isMalignant ? "Malignant" : "Benign" },
-                    { label: "ABCDE Score", value: result.abcdeScore },
-                    { label: "Lesion Area", value: result.lesionArea },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="text-center">
-                      <div className="text-muted-foreground text-xs">{label}</div>
-                      <div className="text-white text-xs font-semibold mt-0.5">{value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {isMalignant && (
-                  <div className="p-2.5 bg-red-900/30 border border-red-700/40 rounded-lg flex items-center gap-2 mb-3">
-                    <AlertTriangle size={14} className="text-red-400 shrink-0" />
-                    <span className="text-red-300 text-xs font-medium">🔔 Emergency Alert — High-risk case detected! On-call team notified.</span>
-                  </div>
-                )}
-
-                {/* Recommendations */}
-                <div className="p-3 bg-black/20 rounded-lg">
-                  <div className="text-white text-xs font-semibold mb-1.5">Recommendations</div>
-                  <p className="text-muted-foreground text-xs leading-relaxed">{result.recommendations}</p>
-                </div>
-              </div>
-
-              {/* ── Explainable AI ───────────────────── */}
-              {(result.explainableAiReasons ?? []).length > 0 && (
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <h3 className="text-white font-bold text-sm mb-3">Explainable AI — Why This Prediction</h3>
-                  <div className="space-y-2">
-                    {result.explainableAiReasons.map((reason: string) => (
-                      <div key={reason} className="flex items-center gap-2.5">
-                        <div className="w-4 h-4 rounded-full bg-green-900/50 border border-green-500/50 flex items-center justify-center shrink-0">
-                          <CheckCircle size={10} className="text-green-400" />
-                        </div>
-                        <span className="text-white text-xs">{reason}</span>
+                  <div className="flex flex-col gap-2 justify-center p-2">
+                    {[
+                      { label: "Report ID",    value: result.reportId },
+                      { label: "Cancer Type",  value: result.cancerType },
+                      { label: "ABCDE Score",  value: result.abcdeScore },
+                      { label: "Lesion Area",  value: result.lesionArea },
+                      { label: "Risk Level",   value: result.riskLevel, colored: true },
+                      { label: "Confidence",   value: `${result.confidenceScore?.toFixed(1)}%` },
+                    ].map(({ label, value, colored }: any) => (
+                      <div key={label} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
+                        <span className="text-muted-foreground text-xs">{label}</span>
+                        <span className={`text-xs font-semibold ${colored ? riskColor : "text-white"}`}>{value}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* ── Download Report ────────────────── */}
-              <Button
-                onClick={() => downloadPDF(result, patientName || "Anonymous")}
-                className="w-full h-11 gradient-purple border-0 font-semibold gap-2"
-              >
-                <Download size={16} /> Download PDF Report
-              </Button>
-              <div className="text-center text-muted-foreground text-xs">
-                Report ID: <span className="font-mono text-white">{result.reportId}</span>
-                <span className="mx-2 text-border">•</span>
-                Opens print dialog → Save as PDF
-              </div>
-
-              {/* Re-analyze */}
-              <Button variant="outline" onClick={() => { setResult(null); setUploadedFile(null); }} className="w-full h-9 text-sm">
-                <RefreshCw size={14} className="mr-2" /> Analyze Another Image
-              </Button>
             </div>
-          )}
+
+            {/* Legend */}
+            <div className="px-4 py-2 border-t border-border flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-green-400 shrink-0" />
+                <span className="text-muted-foreground text-xs">AI-detected lesion boundary (U-Net segmentation)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Probability bars */}
+          <TypeProbBars typeProbs={result.typeProbs ?? {}} prediction={result.prediction} />
+        </div>
+
+        {/* ── Right: Classification result ───────────────────────── */}
+        <div className="xl:col-span-2">
+          <div className={`rounded-xl border p-5 h-full ${riskBg}`}>
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Classification Result</div>
+              <Bookmark size={16} className="text-muted-foreground cursor-pointer hover:text-primary transition-colors" />
+            </div>
+
+            {/* Prediction + Confidence ring */}
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <div className="text-muted-foreground text-xs mb-1">Prediction</div>
+                <div className={`text-2xl font-bold leading-tight ${riskColor}`}>{result.prediction}</div>
+                <div className={`mt-2 px-2.5 py-0.5 rounded text-xs font-bold border inline-block ${
+                  isMalignant ? "bg-red-900/60 text-red-400 border-red-600/50" : "bg-green-900/50 text-green-400 border-green-600/50"
+                }`}>
+                  {result.riskLevel?.toUpperCase()} RISK
+                </div>
+              </div>
+              {/* Circular confidence indicator */}
+              <div className="relative w-16 h-16 shrink-0">
+                <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90">
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1f2937" strokeWidth="3.5" />
+                  <circle cx="18" cy="18" r="15.9" fill="none"
+                    stroke={isMalignant ? "#ef4444" : "#22c55e"}
+                    strokeWidth="3.5"
+                    strokeDasharray={`${result.confidenceScore} ${100 - result.confidenceScore}`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">{Math.round(result.confidenceScore)}%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Confidence score */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-muted-foreground font-semibold">Confidence Score</span>
+                <span className={`font-bold ${riskColor}`}>{result.confidenceScore?.toFixed(1)}%</span>
+              </div>
+              <div className="text-white text-2xl font-bold mb-2">{result.confidenceScore?.toFixed(1)}%</div>
+              <div className="h-2 bg-black/30 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${isMalignant ? "bg-red-400" : "bg-green-400"}`}
+                  style={{ width: `${result.confidenceScore}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Type / Risk / Category */}
+            <div className="grid grid-cols-3 gap-2 py-3 border-t border-white/10 border-b border-b-white/10 mb-4">
+              {[
+                { label: "Type",      value: isMalignant ? "Malignant" : "Benign" },
+                { label: "Risk Level",value: result.riskLevel },
+                { label: "Category",  value: result.category ?? (isMalignant ? "Malignant" : "Non-Cancerous") },
+              ].map(({ label, value }) => (
+                <div key={label} className="text-center">
+                  <div className="text-muted-foreground text-[10px] uppercase tracking-wider">{label}</div>
+                  <div className={`text-xs font-bold mt-1 ${label === "Risk Level" ? riskColor : "text-white"}`}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* About This Result */}
+            <div className="mb-4">
+              <div className="text-white text-xs font-bold mb-2">About This Result</div>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                The lesion has been classified as <span className={`font-semibold ${riskColor}`}>{result.prediction}</span>
+                {" "}with a {isMalignant ? "high" : "low"} risk score.{" "}
+                {isMalignant
+                  ? "It is recommended to consult a dermatologist as soon as possible for further evaluation."
+                  : "It is recommended to monitor the lesion regularly and consult a dermatologist for a routine check-up."
+                }
+              </p>
+            </div>
+
+            {/* Recommended Action */}
+            {(result.explainableAiReasons ?? []).length > 0 && (
+              <div>
+                <div className="text-white text-xs font-bold mb-2">Recommended Action</div>
+                <div className="space-y-1.5">
+                  {(result.recommendations ?? "").split(". ").filter(Boolean).slice(0, 4).map((r: string) => (
+                    <div key={r} className="flex items-start gap-2">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isMalignant ? "bg-red-900/60" : "bg-green-900/50"}`}>
+                        <CheckCircle size={10} className={isMalignant ? "text-red-400" : "text-green-400"} />
+                      </div>
+                      <span className="text-muted-foreground text-xs leading-tight">{r.trim()}{!r.endsWith(".") ? "." : ""}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Emergency alert */}
+            {isMalignant && (
+              <div className="mt-4 p-2.5 bg-red-900/30 border border-red-700/40 rounded-lg flex items-center gap-2">
+                <AlertTriangle size={13} className="text-red-400 shrink-0" />
+                <span className="text-red-300 text-xs font-medium">Emergency — High-risk case! On-call dermatologist notified.</span>
+              </div>
+            )}
+
+            {/* ABCDE */}
+            <div className="mt-4 grid grid-cols-2 gap-2 pt-3 border-t border-white/10">
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">ABCDE Score</div>
+                <div className="text-white text-sm font-bold mt-0.5">{result.abcdeScore}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Lesion Area</div>
+                <div className="text-white text-sm font-bold mt-0.5">{result.lesionArea}</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

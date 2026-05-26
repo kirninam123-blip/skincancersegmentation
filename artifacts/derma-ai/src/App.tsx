@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState } from "react";
 import {
-  LayoutDashboard, Scan, Users, History, UserCog,
-  LogOut, FileText, ChevronRight, Activity, Bell
+  LayoutDashboard, Scan, Users, History, UserCircle,
+  LogOut, FileText, ChevronRight, Activity, Bell, Settings
 } from "lucide-react";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
@@ -19,12 +19,13 @@ import NotFound from "@/pages/not-found";
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } });
 
 const SIDEBAR_ITEMS = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: LayoutDashboard, label: "Dashboard",    path: "/" },
   { icon: Scan,            label: "New Analysis", path: "/analyze", arrow: true },
-  { icon: History,         label: "History",     path: "/history" },
-  { icon: FileText,        label: "Reports",     path: "/reports" },
-  { icon: Users,           label: "Doctors",     path: "/doctors" },
-  { icon: UserCog,         label: "Profile & Settings", path: "/profile" },
+  { icon: History,         label: "History",      path: "/history" },
+  { icon: FileText,        label: "Reports",      path: "/reports" },
+  { icon: Users,           label: "Doctors",      path: "/doctors" },
+  { icon: UserCircle,      label: "Profile",      path: "/profile" },
+  { icon: Settings,        label: "Settings",     path: "/settings" },
 ];
 
 const TOP_NAV = [
@@ -50,10 +51,7 @@ function AppLayout({ user, onLogout }: { user: { name: string; role: string }; o
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
       {/* ── Top Header ─────────────────────────────────────── */}
-      <header
-        className="flex items-center border-b border-border bg-card px-4 shrink-0 z-30"
-        style={{ height: "52px" }}
-      >
+      <header className="flex items-center border-b border-border bg-card px-4 shrink-0 z-30" style={{ height: "52px" }}>
         {/* Logo */}
         <div className="flex items-center gap-2.5 w-44 shrink-0">
           <div className="w-8 h-8 rounded-lg gradient-purple flex items-center justify-center shrink-0">
@@ -65,24 +63,18 @@ function AppLayout({ user, onLogout }: { user: { name: string; role: string }; o
           </div>
         </div>
 
-        {/* Top nav tabs */}
+        {/* Top nav */}
         <nav className="flex items-center gap-1 flex-1 justify-center">
           {TOP_NAV.map(({ label, path }) => (
             <Link key={path} href={path}>
-              <div
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
-                  isActive(path)
-                    ? "bg-primary text-white"
-                    : "text-muted-foreground hover:text-white hover:bg-muted/30"
-                }`}
-              >
-                {label}
-              </div>
+              <div className={`px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
+                isActive(path) ? "bg-primary text-white" : "text-muted-foreground hover:text-white hover:bg-muted/30"
+              }`}>{label}</div>
             </Link>
           ))}
         </nav>
 
-        {/* Right: Bell + User */}
+        {/* Right */}
         <div className="flex items-center gap-3 w-44 justify-end">
           <div className="relative cursor-pointer">
             <Bell size={18} className="text-muted-foreground hover:text-white transition-colors" />
@@ -107,13 +99,11 @@ function AppLayout({ user, onLogout }: { user: { name: string; role: string }; o
           <nav className="flex-1 px-2 py-3 space-y-0.5">
             {SIDEBAR_ITEMS.map(({ icon: Icon, label, path, arrow }) => (
               <Link key={label} href={path}>
-                <div
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer text-sm transition-all ${
-                    isActive(path)
-                      ? "bg-primary text-white font-medium"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-white"
-                  }`}
-                >
+                <div className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer text-sm transition-all ${
+                  isActive(path)
+                    ? "bg-primary text-white font-medium"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-white"
+                }`}>
                   <Icon size={16} className="shrink-0" />
                   <span className="flex-1 text-xs leading-tight">{label}</span>
                   {arrow && <ChevronRight size={12} className="opacity-50 shrink-0" />}
@@ -122,7 +112,7 @@ function AppLayout({ user, onLogout }: { user: { name: string; role: string }; o
             ))}
           </nav>
 
-          {/* AI Accuracy badge */}
+          {/* AI Accuracy */}
           <div className="mx-2 mb-3 p-3 bg-purple-900/30 border border-purple-700/30 rounded-xl">
             <div className="flex items-center gap-1.5 mb-1">
               <Activity size={12} className="text-purple-400" />
@@ -133,11 +123,7 @@ function AppLayout({ user, onLogout }: { user: { name: string; role: string }; o
             <div className="text-muted-foreground text-[10px]">Trained on 80k+ samples</div>
           </div>
 
-          {/* Logout */}
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2.5 px-5 py-3 text-red-400 hover:bg-red-900/20 transition-colors text-sm border-t border-sidebar-border w-full"
-          >
+          <button onClick={onLogout} className="flex items-center gap-2.5 px-5 py-3 text-red-400 hover:bg-red-900/20 transition-colors text-sm border-t border-sidebar-border w-full">
             <LogOut size={16} /> <span className="text-xs">Logout</span>
           </button>
         </aside>
@@ -145,12 +131,13 @@ function AppLayout({ user, onLogout }: { user: { name: string; role: string }; o
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto scrollbar-thin">
           <Switch>
-            <Route path="/"        component={Dashboard} />
-            <Route path="/analyze" component={Analyze} />
-            <Route path="/doctors" component={Doctors} />
-            <Route path="/history" component={HistoryPage} />
-            <Route path="/reports" component={ReportsPage} />
-            <Route path="/profile" component={Profile} />
+            <Route path="/"         component={Dashboard} />
+            <Route path="/analyze"  component={Analyze} />
+            <Route path="/doctors"  component={Doctors} />
+            <Route path="/history"  component={HistoryPage} />
+            <Route path="/reports"  component={ReportsPage} />
+            <Route path="/profile"  component={Profile} />
+            <Route path="/settings" component={Profile} />
             <Route component={NotFound} />
           </Switch>
         </main>
@@ -166,11 +153,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          {user ? (
-            <AppLayout user={user} onLogout={() => setUser(null)} />
-          ) : (
-            <Login onLogin={setUser} />
-          )}
+          {user ? <AppLayout user={user} onLogout={() => setUser(null)} /> : <Login onLogin={setUser} />}
         </WouterRouter>
         <Toaster />
       </TooltipProvider>
