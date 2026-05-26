@@ -7,15 +7,15 @@ import { Input } from "@/components/ui/input";
 const CITIES = ["All", "Lahore", "Karachi", "Islamabad", "Rawalpindi", "Peshawar"];
 
 const DOCTORS = [
-  { id: 1, name: "Dr. Ahmed Hassan",   specialty: "Dermatology & Skin Cancer Specialist",   hospital: "Shaukat Khanum Memorial Cancer Hospital", city: "Lahore",     experience: 18, rating: 4.9, phone: "+92-42-3590-5000", email: "ahmed.hassan@shaukat.pk",   bio: "Pioneer of AI-assisted dermatology in Pakistan. Senior dermatologist specializing in early-stage skin cancer detection.", isOnline: true  },
-  { id: 2, name: "Dr. Fatima Khan",    specialty: "Dermatology & Oncology Specialist",       hospital: "Aga Khan University Hospital",             city: "Karachi",    experience: 14, rating: 4.8, phone: "+92-21-3493-0051", email: "fatima.khan@akuh.pk",        bio: "Specialist in melanoma and pigmented lesion analysis. Trained at London School of Dermatology.",              isOnline: true  },
-  { id: 3, name: "Dr. Usman Ali",      specialty: "Consultant Dermatologist",                hospital: "PIMS (Pakistan Institute of Medical Sciences)", city: "Islamabad", experience: 12, rating: 4.7, phone: "+92-51-926-1170", email: "usman.ali@pims.pk",          bio: "Expert in non-surgical skin cancer treatment and photodynamic therapy.",                                       isOnline: true  },
-  { id: 4, name: "Dr. Ayesha Malik",   specialty: "Pediatric Dermatologist",                 hospital: "Children Hospital Lahore",                 city: "Lahore",     experience:  9, rating: 4.6, phone: "+92-42-9923-1371", email: "ayesha.malik@chl.pk",        bio: "Pediatric dermatology specialist with focus on benign and malignant skin tumors in children.",                 isOnline: false },
-  { id: 5, name: "Dr. Muhammad Tariq", specialty: "Mohs Surgery & Skin Cancer",              hospital: "Liaquat National Hospital",                city: "Karachi",    experience: 20, rating: 4.9, phone: "+92-21-3411-7460", email: "muhammad.tariq@lnh.pk",      bio: "Pakistan's leading Mohs micrographic surgery expert. 20+ years treating carcinomas.",                         isOnline: true  },
-  { id: 6, name: "Dr. Sana Qureshi",   specialty: "Dermato-Oncology Specialist",             hospital: "Holy Family Hospital",                     city: "Rawalpindi", experience: 11, rating: 4.7, phone: "+92-51-923-0786",  email: "sana.qureshi@hfh.pk",        bio: "Specializes in dermoscopy and computer-aided diagnosis of pigmented skin lesions.",                            isOnline: true  },
-  { id: 7, name: "Dr. Imran Qureshi",  specialty: "Consultant Dermatologist",                hospital: "Lady Reading Hospital",                    city: "Peshawar",   experience: 15, rating: 4.5, phone: "+92-91-921-0430",  email: "imran.qureshi@lrh.pk",       bio: "Pioneer of telemedicine dermatology in KPK. Expert in skin cancer detection for the Peshawar region.",        isOnline: true  },
-  { id: 8, name: "Dr. Zara Hussain",   specialty: "Clinical Dermatologist",                  hospital: "Services Hospital",                        city: "Lahore",     experience:  8, rating: 4.4, phone: "+92-42-9203-4400", email: "zara.hussain@services.pk",   bio: "Expert in skin lesion biopsies and histopathological analysis with a focus on malignant tumors.",              isOnline: false },
-  { id: 9, name: "Dr. Asif Mehmood",   specialty: "Surgical Dermatologist",                  hospital: "Civil Hospital Karachi",                   city: "Karachi",    experience: 16, rating: 4.6, phone: "+92-21-9920-4900", email: "asif.mehmood@civil.pk",      bio: "Surgical dermatologist specializing in excision of malignant skin lesions and reconstructive procedures.",     isOnline: true  },
+  { id: 1, name: "Dr. Ahmed Hassan",   specialty: "Dermatology & Skin Cancer Specialist",      hospital: "Shaukat Khanum Memorial Cancer Hospital", city: "Lahore",     experience: 18, rating: 4.9, phone: "+92-42-3590-5000", email: "ahmed.hassan@shaukat.pk",   bio: "Pioneer of AI-assisted dermatology in Pakistan. Senior dermatologist specializing in early-stage skin cancer detection.", isOnline: true  },
+  { id: 2, name: "Dr. Fatima Khan",    specialty: "Dermatology & Oncology Specialist",          hospital: "Aga Khan University Hospital",             city: "Karachi",    experience: 14, rating: 4.8, phone: "+92-21-3493-0051", email: "fatima.khan@akuh.pk",        bio: "Specialist in melanoma and pigmented lesion analysis. Trained at London School of Dermatology.",              isOnline: true  },
+  { id: 3, name: "Dr. Usman Ali",      specialty: "Consultant Dermatologist",                   hospital: "PIMS — Pakistan Institute of Medical Sciences", city: "Islamabad", experience: 12, rating: 4.7, phone: "+92-51-926-1170", email: "usman.ali@pims.pk",          bio: "Expert in non-surgical skin cancer treatment and photodynamic therapy.",                                       isOnline: true  },
+  { id: 4, name: "Dr. Ayesha Malik",   specialty: "Pediatric Dermatologist",                    hospital: "Children Hospital Lahore",                 city: "Lahore",     experience:  9, rating: 4.6, phone: "+92-42-9923-1371", email: "ayesha.malik@chl.pk",        bio: "Pediatric dermatology specialist with focus on benign and malignant skin tumors in children.",                 isOnline: false },
+  { id: 5, name: "Dr. Muhammad Tariq", specialty: "Mohs Surgery & Skin Cancer",                 hospital: "Liaquat National Hospital",                city: "Karachi",    experience: 20, rating: 4.9, phone: "+92-21-3411-7460", email: "muhammad.tariq@lnh.pk",      bio: "Pakistan's leading Mohs micrographic surgery expert. 20+ years treating carcinomas.",                         isOnline: true  },
+  { id: 6, name: "Dr. Sana Qureshi",   specialty: "Dermato-Oncology Specialist",                hospital: "Holy Family Hospital",                     city: "Rawalpindi", experience: 11, rating: 4.7, phone: "+92-51-923-0786",  email: "sana.qureshi@hfh.pk",        bio: "Specializes in dermoscopy and computer-aided diagnosis of pigmented skin lesions.",                            isOnline: true  },
+  { id: 7, name: "Dr. Imran Qureshi",  specialty: "Consultant Dermatologist",                   hospital: "Lady Reading Hospital",                    city: "Peshawar",   experience: 15, rating: 4.5, phone: "+92-91-921-0430",  email: "imran.qureshi@lrh.pk",       bio: "Pioneer of telemedicine dermatology in KPK. Expert in skin cancer detection for the Peshawar region.",        isOnline: true  },
+  { id: 8, name: "Dr. Zara Hussain",   specialty: "Clinical Dermatologist",                     hospital: "Services Hospital",                        city: "Lahore",     experience:  8, rating: 4.4, phone: "+92-42-9203-4400", email: "zara.hussain@services.pk",   bio: "Expert in skin lesion biopsies and histopathological analysis with a focus on malignant tumors.",              isOnline: false },
+  { id: 9, name: "Dr. Asif Mehmood",   specialty: "Surgical Dermatologist",                     hospital: "Civil Hospital Karachi",                   city: "Karachi",    experience: 16, rating: 4.6, phone: "+92-21-9920-4900", email: "asif.mehmood@civil.pk",      bio: "Surgical dermatologist specializing in excision of malignant skin lesions and reconstructive procedures.",     isOnline: true  },
 ];
 
 const AVATAR_COLORS = [
@@ -41,26 +41,31 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-/* ── Message Modal ────────────────────────────────────────────────────── */
-interface MsgModalProps {
+/* ── Shared Contact Modal (Message or Appointment) ──────────────────── */
+interface ContactModalProps {
   doctor: typeof DOCTORS[0];
+  mode: "msg" | "appt";
   onClose: () => void;
   onSent: () => void;
 }
-function MessageModal({ doctor, onClose, onSent }: MsgModalProps) {
+
+function ContactModal({ doctor, mode, onClose, onSent }: ContactModalProps) {
   const [senderName, setSenderName] = useState("");
   const [phone, setPhone]           = useState("");
   const [message, setMessage]       = useState("");
   const [sending, setSending]       = useState(false);
 
+  const isAppt = mode === "appt";
+  const title  = isAppt ? "Book Appointment" : "Send Message";
+  const msgPlaceholder = isAppt
+    ? "Preferred date/time, symptoms, or any special requirements..."
+    : "Describe your concern, symptoms, or question...";
+  const sendLabel = isAppt ? "Book Appointment" : "Send Message";
+
   function handleSend() {
     if (!senderName.trim() || !phone.trim() || !message.trim()) return;
     setSending(true);
-    setTimeout(() => {
-      setSending(false);
-      onSent();
-      onClose();
-    }, 900);
+    setTimeout(() => { setSending(false); onSent(); onClose(); }, 900);
   }
 
   return (
@@ -69,8 +74,8 @@ function MessageModal({ doctor, onClose, onSent }: MsgModalProps) {
         {/* Header */}
         <div className="flex items-start justify-between mb-5">
           <div>
-            <h3 className="text-white font-bold text-base">Send Message</h3>
-            <p className="text-muted-foreground text-xs mt-0.5">to {doctor.name}</p>
+            <h3 className="text-white font-bold text-base">{title}</h3>
+            <p className="text-muted-foreground text-xs mt-0.5">with {doctor.name}</p>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-white p-1"><X size={18} /></button>
         </div>
@@ -87,29 +92,30 @@ function MessageModal({ doctor, onClose, onSent }: MsgModalProps) {
           </div>
         </div>
 
-        {/* Form */}
+        {/* Form fields */}
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-muted-foreground block mb-1.5">Your Full Name *</label>
+            <label className="text-xs text-muted-foreground block mb-1.5">Patient Full Name *</label>
             <Input value={senderName} onChange={e => setSenderName(e.target.value)} placeholder="Muhammad Ali" className="h-9 bg-background text-sm" />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground block mb-1.5">Your Phone Number *</label>
+            <label className="text-xs text-muted-foreground block mb-1.5">Phone Number *</label>
             <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+92-300-1234567" type="tel" className="h-9 bg-background text-sm" />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground block mb-1.5">Your Message *</label>
+            <label className="text-xs text-muted-foreground block mb-1.5">
+              {isAppt ? "Appointment Request Details *" : "Your Message *"}
+            </label>
             <textarea
               value={message}
               onChange={e => setMessage(e.target.value)}
-              placeholder="Describe your concern, symptoms, or question..."
+              placeholder={msgPlaceholder}
               rows={4}
               className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3 mt-5">
           <Button variant="outline" onClick={onClose} className="flex-1 h-10 text-sm">Cancel</Button>
           <Button
@@ -117,7 +123,7 @@ function MessageModal({ doctor, onClose, onSent }: MsgModalProps) {
             disabled={!senderName.trim() || !phone.trim() || !message.trim() || sending}
             className="flex-1 h-10 gradient-purple border-0 text-sm gap-2"
           >
-            {sending ? <><Activity size={14} className="animate-spin" /> Sending...</> : <><Send size={14} /> Send Message</>}
+            {sending ? <><Activity size={14} className="animate-spin" />Sending...</> : <><Send size={14} />{sendLabel}</>}
           </Button>
         </div>
       </div>
@@ -126,9 +132,9 @@ function MessageModal({ doctor, onClose, onSent }: MsgModalProps) {
 }
 
 export default function Doctors() {
-  const [selectedCity, setSelectedCity] = useState("All");
-  const [sentActions, setSentActions]   = useState<Record<string, boolean>>({});
-  const [msgModal, setMsgModal]         = useState<typeof DOCTORS[0] | null>(null);
+  const [selectedCity, setSelectedCity]   = useState("All");
+  const [sentActions, setSentActions]     = useState<Record<string, boolean>>({});
+  const [modal, setModal]                 = useState<{ doctor: typeof DOCTORS[0]; mode: "msg" | "appt" } | null>(null);
   const { toast } = useToast();
 
   const filtered = DOCTORS.filter(d => selectedCity === "All" || d.city === selectedCity);
@@ -139,26 +145,26 @@ export default function Doctors() {
 
   function handleCall(doctor: typeof DOCTORS[0]) {
     markSent(doctor.id, "call");
-    toast({ title: "Call Request Sent ✓", description: `Call request sent to ${doctor.name}. They will call you back shortly on your registered number.` });
+    toast({ title: "Call Request Sent ✓", description: `Call request sent to ${doctor.name}. They will call you back shortly.` });
   }
 
-  function handleAppt(doctor: typeof DOCTORS[0]) {
-    markSent(doctor.id, "appt");
-    toast({ title: "Appointment Booked ✓", description: `Appointment booked with ${doctor.name}. You'll receive a confirmation SMS within 5 minutes.` });
-  }
-
-  function handleMsgSent(doctor: typeof DOCTORS[0]) {
-    markSent(doctor.id, "msg");
-    toast({ title: "Message Sent ✓", description: `Your message was sent to ${doctor.name}. You'll receive a reply within 24 hours.` });
+  function handleSent(doctor: typeof DOCTORS[0], mode: "msg" | "appt") {
+    markSent(doctor.id, mode);
+    if (mode === "msg") {
+      toast({ title: "Message Sent ✓", description: `Your message was sent to ${doctor.name}. Expect a reply within 24 hours.` });
+    } else {
+      toast({ title: "Appointment Requested ✓", description: `Appointment request sent to ${doctor.name}. You'll receive a confirmation SMS soon.` });
+    }
   }
 
   return (
     <>
-      {msgModal && (
-        <MessageModal
-          doctor={msgModal}
-          onClose={() => setMsgModal(null)}
-          onSent={() => handleMsgSent(msgModal)}
+      {modal && (
+        <ContactModal
+          doctor={modal.doctor}
+          mode={modal.mode}
+          onClose={() => setModal(null)}
+          onSent={() => handleSent(modal.doctor, modal.mode)}
         />
       )}
 
@@ -191,7 +197,7 @@ export default function Doctors() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((doctor, idx) => (
             <div key={doctor.id} className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-all flex flex-col">
-              {/* Header */}
+              {/* Doctor header */}
               <div className="flex items-start gap-3 mb-4">
                 <div
                   className={`relative rounded-xl bg-gradient-to-br ${AVATAR_COLORS[idx % AVATAR_COLORS.length]} flex items-center justify-center shrink-0`}
@@ -230,18 +236,17 @@ export default function Doctors() {
                 </div>
               </div>
 
-              {/* Bio */}
               <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 mb-4 flex-1">{doctor.bio}</p>
 
               {/* Action buttons */}
               <div className="grid grid-cols-3 gap-2 mt-auto">
                 {/* Message */}
                 <button
-                  onClick={() => sentActions[`${doctor.id}-msg`] ? null : setMsgModal(doctor)}
+                  onClick={() => !sentActions[`${doctor.id}-msg`] && setModal({ doctor, mode: "msg" })}
                   className={`flex flex-col items-center gap-1.5 py-2.5 rounded-lg border transition-all ${
                     sentActions[`${doctor.id}-msg`]
-                      ? "border-green-600/40 bg-green-900/20"
-                      : "border-border hover:border-primary hover:bg-primary/10"
+                      ? "border-green-600/40 bg-green-900/20 cursor-default"
+                      : "border-border hover:border-primary hover:bg-primary/10 cursor-pointer"
                   }`}
                 >
                   {sentActions[`${doctor.id}-msg`]
@@ -257,8 +262,8 @@ export default function Doctors() {
                   onClick={() => !sentActions[`${doctor.id}-call`] && handleCall(doctor)}
                   className={`flex flex-col items-center gap-1.5 py-2.5 rounded-lg border transition-all ${
                     sentActions[`${doctor.id}-call`]
-                      ? "border-green-600/40 bg-green-900/20"
-                      : "border-border hover:border-green-500 hover:bg-green-500/10"
+                      ? "border-green-600/40 bg-green-900/20 cursor-default"
+                      : "border-border hover:border-green-500 hover:bg-green-500/10 cursor-pointer"
                   }`}
                 >
                   {sentActions[`${doctor.id}-call`]
@@ -271,11 +276,11 @@ export default function Doctors() {
 
                 {/* Appointment */}
                 <button
-                  onClick={() => !sentActions[`${doctor.id}-appt`] && handleAppt(doctor)}
+                  onClick={() => !sentActions[`${doctor.id}-appt`] && setModal({ doctor, mode: "appt" })}
                   className={`flex flex-col items-center gap-1.5 py-2.5 rounded-lg border transition-all ${
                     sentActions[`${doctor.id}-appt`]
-                      ? "border-green-600/40 bg-green-900/20"
-                      : "border-border hover:border-blue-500 hover:bg-blue-500/10"
+                      ? "border-green-600/40 bg-green-900/20 cursor-default"
+                      : "border-border hover:border-blue-500 hover:bg-blue-500/10 cursor-pointer"
                   }`}
                 >
                   {sentActions[`${doctor.id}-appt`]

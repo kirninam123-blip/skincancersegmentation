@@ -1,16 +1,19 @@
 import { useState } from "react";
-import { User, Settings, Bell, Lock, Shield, Camera, Save, Eye, EyeOff } from "lucide-react";
+import { User, Settings, Bell, Lock, Shield, Camera, Save, Eye, EyeOff, Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
+import { Info } from "lucide-react";
+
 const TABS = [
-  { key: "profile", label: "Profile", icon: User },
-  { key: "settings", label: "Settings", icon: Settings },
-  { key: "notifications", label: "Notifications", icon: Bell },
-  { key: "password", label: "Change Password", icon: Lock },
-  { key: "security", label: "Security", icon: Shield },
+  { key: "profile",       label: "Profile",          icon: User     },
+  { key: "settings",      label: "Settings",         icon: Settings },
+  { key: "notifications", label: "Notifications",    icon: Bell     },
+  { key: "password",      label: "Change Password",  icon: Lock     },
+  { key: "security",      label: "Security",         icon: Shield   },
+  { key: "about",         label: "About DermaAI",    icon: Info     },
 ];
 
 export default function Profile() {
@@ -276,6 +279,91 @@ export default function Profile() {
                 <Button onClick={handleChangePassword} className="w-full gradient-purple border-0" data-testid="button-change-password">
                   <Lock size={14} className="mr-2" /> Update Password
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* About Tab */}
+          {activeTab === "about" && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl gradient-purple flex items-center justify-center">
+                  <Activity size={22} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-white font-bold text-xl">AI Dermascan</h2>
+                  <p className="text-primary text-xs font-medium">Pakistan Dermatology Initiative</p>
+                </div>
+              </div>
+
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                AI Dermascan is an advanced AI-powered skin cancer detection platform built for Pakistan's medical community.
+                It helps dermatologists and general practitioners detect and classify skin lesions with clinical-grade accuracy
+                using deep learning models trained on thousands of dermoscopic images.
+              </p>
+
+              {/* Version + key numbers */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: "Version",     value: "v2.1.0"   },
+                  { label: "Accuracy",    value: "96.4%"    },
+                  { label: "Skin Types",  value: "4 Types"  },
+                  { label: "Doctors",     value: "12+ PK"   },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-background border border-border rounded-xl p-3 text-center">
+                    <div className="text-white font-bold text-lg">{value}</div>
+                    <div className="text-muted-foreground text-xs mt-0.5">{label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Features */}
+              <div>
+                <div className="text-white text-sm font-bold mb-3">Key Features</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    "U-Net deep learning segmentation overlay",
+                    "4-class skin cancer classification (Melanoma, BCC, Benign Keratosis, Nevus)",
+                    "Grad-CAM heatmap for explainable AI",
+                    "ABCDE dermoscopic risk scoring",
+                    "PDF clinical report with QR verification",
+                    "Risk progress timeline prediction",
+                    "Pakistani doctors directory (9+ cities)",
+                    "AI Doctor chatbot assistant",
+                    "Emergency alert system for high-risk cases",
+                    "Pakistan Standard Time (PST) timestamps",
+                  ].map(f => (
+                    <div key={f} className="flex items-start gap-2.5 p-2.5 bg-background border border-border/50 rounded-lg">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
+                      <span className="text-muted-foreground text-xs leading-relaxed">{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Technology stack */}
+              <div>
+                <div className="text-white text-sm font-bold mb-3">Technology Stack</div>
+                <div className="flex flex-wrap gap-2">
+                  {["React + Vite","TypeScript","Tailwind CSS v4","Express 5","PostgreSQL","Drizzle ORM","TanStack Query v5","Recharts","Zod Validation","OpenAPI Spec"].map(t => (
+                    <span key={t} className="px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary text-xs rounded-full font-medium">{t}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mission statement */}
+              <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl">
+                <div className="text-white text-sm font-bold mb-2">Our Mission</div>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  To make early skin cancer detection accessible to every Pakistani patient and physician
+                  by combining world-class AI with local medical expertise — improving outcomes and
+                  saving lives across Pakistan.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-1 text-xs text-muted-foreground border-t border-border">
+                <span>AI Dermascan — Pakistan Dermatology Initiative</span>
+                <span>© 2025 DermaAI</span>
               </div>
             </div>
           )}

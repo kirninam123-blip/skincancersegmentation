@@ -17,6 +17,7 @@ export default function Login({ onLogin }: LoginProps) {
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    try { localStorage.setItem("dermaai_user_name", username.charAt(0).toUpperCase() + username.slice(1)); } catch {}
     if (!username || !password) {
       setError("Please enter username and password.");
       return;
