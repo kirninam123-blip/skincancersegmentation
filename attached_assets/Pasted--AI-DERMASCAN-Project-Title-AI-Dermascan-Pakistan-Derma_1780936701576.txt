@@ -1,0 +1,873 @@
+# AI DERMASCAN 
+## Project Title
+
+**AI Dermascan – Pakistan Dermatology Initiative**
+
+Build a production-grade, full-stack AI-powered skin cancer detection and dermatology management platform with advanced lesion segmentation, heatmap visualization, patient management, doctor consultation, medical reporting, and real-time analytics.
+
+The system should have a premium medical dark theme, professional hospital-grade dashboard, responsive UI, and modern SaaS architecture.
+
+---
+
+# PROJECT OVERVIEW
+
+AI Dermascan is an intelligent healthcare platform designed for:
+
+* Patients
+* Dermatologists
+* Hospitals
+* Clinics
+* Medical Researchers
+
+The platform allows users to:
+
+* Upload skin lesion images
+* Perform AI-powered skin cancer detection
+* Generate lesion segmentation masks
+* Visualize AI heatmaps
+* Calculate confidence scores
+* Assess risk levels
+* Generate PDF reports
+* Track patient history
+* Consult dermatologists
+* Book appointments
+* Receive notifications
+
+---
+
+# TARGET PERFORMANCE
+
+### AI Accuracy
+
+* Standard Accuracy: 96.4%
+* Enhanced Accuracy: 98.1%
+* Training Dataset: 80,000+ Skin Lesion Images
+
+### Supported Diseases
+
+* Melanoma
+* Basal Cell Carcinoma
+* Benign Keratosis
+* Nevus
+
+---
+
+# TECHNOLOGY STACK
+
+## Frontend
+
+* Next.js
+* React.js
+* TypeScript
+* Tailwind CSS
+* Framer Motion
+* ShadCN UI
+
+## Backend
+
+* Python
+* FastAPI
+
+## Database
+
+* PostgreSQL
+
+## Authentication
+
+* JWT Authentication
+* Role-Based Access Control
+
+## Storage
+
+* AWS S3
+* Cloudinary
+
+## AI Models
+
+### Segmentation
+
+* U-Net
+
+### Classification
+
+* EfficientNet-B4
+
+### Explainability
+
+* Grad-CAM
+
+## Reporting
+
+* ReportLab
+
+## Notifications
+
+* Email Notifications
+* WhatsApp Integration
+
+## Deployment
+
+* Docker
+* Railway
+* Vercel
+
+---
+
+# UI DESIGN
+
+## Theme
+
+Premium Medical Dark Theme
+
+## Colors
+
+Background: #050816
+
+Card Background: #0F172A
+
+Primary Purple: #8B5CF6
+
+Secondary Purple: #A855F7
+
+Text: White
+
+Accent Glow: Neon Purple
+
+## Design Style
+
+* Glassmorphism
+* Medical SaaS Dashboard
+* Smooth Animations
+* Fully Responsive
+* Premium Healthcare Interface
+
+---
+
+# SIDEBAR NAVIGATION
+
+Create a fixed professional sidebar.
+
+Menu Items:
+
+1. Dashboard
+2. New Analysis
+3. History
+4. Doctors
+5. Settings
+6. Logout
+
+Important:
+
+* Reports should be included inside History.
+* Profile should be included inside Settings.
+* Do not create separate Reports page.
+* Do not create separate Profile page.
+
+---
+
+# DASHBOARD PAGE
+
+## Welcome Section
+
+Good Morning, Patient
+
+Pakistan Dermatology Initiative
+
+---
+
+## Patient Statistics
+
+Display Cards:
+
+* My Total Scans
+* My High Risk Cases
+* My Benign Cases
+* Average Confidence
+
+Example:
+
+Total Scans: 19
+
+High Risk: 7
+
+Benign: 12
+
+Average Confidence: 91.57%
+
+---
+
+## Clinic KPI Cards
+
+Display:
+
+* Total Analyses
+* High Risk Detected
+* AI Accuracy Rate
+* Analyses Today
+
+---
+
+## AI Accuracy Section
+
+96.4% Overall Accuracy
+
+98.1% Enhanced Accuracy
+
+80,000+ Images Trained
+
+---
+
+## Active Models
+
+U-Net Segmentation
+
+97.2%
+
+EfficientNet-B4
+
+96.4%
+
+Grad-CAM
+
+94.8%
+
+---
+
+## Recent Analysis Table
+
+Columns:
+
+* Patient Name
+* Date
+* Prediction
+* Confidence
+* Risk Level
+
+---
+
+# NEW ANALYSIS PAGE
+
+Create a complete patient registration and AI analysis form.
+
+---
+
+## Patient Information
+
+Fields:
+
+* Patient Name
+* Age
+* Gender
+* Address
+* Phone Number
+* Email Address
+
+Gender:
+
+* Male
+* Female
+* Other
+
+---
+
+## Clinical Information
+
+Fields:
+
+* Lesion Location
+* Lesion Duration
+* Family History of Skin Cancer
+* Previous Skin Cancer History
+* Symptoms
+* Clinical Notes
+
+Symptoms:
+
+* Itching
+* Bleeding
+* Pain
+* Growth
+* Color Change
+
+---
+
+## Image Upload
+
+Drag and Drop Upload Area
+
+Supported:
+
+* JPG
+* PNG
+* JPEG
+* WEBP
+
+Maximum File Size:
+
+10MB
+
+Show Image Preview
+
+Buttons:
+
+* Upload Image
+* Reset Form
+* Run AI Analysis
+
+---
+
+# AI ANALYSIS PIPELINE
+
+## Step 1 – Image Preprocessing
+
+Perform:
+
+* Resize
+* Normalize
+* Noise Reduction
+
+---
+
+## Step 2 – Lesion Segmentation
+
+Use U-Net.
+
+Requirements:
+
+* Cover entire lesion area
+* Accurate lesion boundary detection
+* Red transparent lesion mask
+* Neon Cyan boundary
+* Full lesion coverage
+* Smooth contour detection
+
+Metrics:
+
+* Dice Score ≥95%
+* IoU ≥90%
+* Pixel Accuracy ≥95%
+
+---
+
+## Step 3 – Classification
+
+Use EfficientNet-B4.
+
+Predict:
+
+* Melanoma
+* Basal Cell Carcinoma
+* Benign Keratosis
+* Nevus
+
+---
+
+## Step 4 – Heatmap Generation
+
+Generate Grad-CAM heatmap.
+
+Highlight suspicious regions influencing prediction.
+
+---
+
+## Step 5 – Analysis Metrics
+
+Calculate:
+
+* Confidence Score
+* Risk Level
+* Lesion Area %
+* Border Irregularity
+* Color Variation
+* Asymmetry Score
+
+---
+
+# ANALYSIS RESULT PAGE
+
+Create four tabs.
+
+---
+
+## Tab 1 – Original Image
+
+Display uploaded image.
+
+---
+
+## Tab 2 – Segmentation
+
+Display:
+
+* Original Image
+* Segmented Image
+
+Show:
+
+* Red Lesion Overlay
+* Neon Cyan Border
+* Full Lesion Coverage
+
+Text:
+
+AI-Detected Lesion Boundary (U-Net Segmentation)
+
+---
+
+## Tab 3 – Heatmap
+
+Display AI attention map.
+
+Text:
+
+AI Focus Area
+
+Shows regions used by AI for diagnosis.
+
+---
+
+## Tab 4 – Details
+
+Display:
+
+* Lesion Area %
+* Border Irregularity
+* Color Variation
+* Asymmetry Score
+* Confidence Score
+
+---
+
+# PREDICTION RESULT CARD
+
+Display:
+
+Prediction
+
+Confidence
+
+Risk Level
+
+Category
+
+Example:
+
+Benign Keratosis
+
+Confidence: 96.1%
+
+Risk Level: LOW RISK
+
+Category: Non-Cancerous
+
+---
+
+# PROBABILITY DISTRIBUTION
+
+Display probabilities for:
+
+* Melanoma
+* Basal Cell Carcinoma
+* Benign Keratosis
+* Nevus
+
+Example:
+
+Melanoma: 94.2%
+
+Basal Cell Carcinoma: 3.1%
+
+Benign Keratosis: 1.8%
+
+Nevus: 0.9%
+
+---
+
+# RECOMMENDATIONS
+
+## Low Risk
+
+* Routine Check-Up
+* Monitor Changes
+* Use Sunscreen
+
+## Medium Risk
+
+* Dermatologist Consultation
+
+## High Risk
+
+* Immediate Medical Evaluation
+
+---
+
+# QUANTUM BIO-DERMAL SYNTHESIS (QBS)
+
+Create an Advanced Research Section.
+
+Display:
+
+### Quantum Layer Isolation
+
+### Vasculature Mapping
+
+### Sub-Dermal Density
+
+### Cellular Density
+
+---
+
+## Quantum Signal Analysis
+
+Display:
+
+* Solar Thermal Optical Depth
+* Bio-Signal Coherence
+* Predicted Evolutionary Path
+
+Enhanced Accuracy:
+
+98.1%
+
+---
+
+# HISTORY PAGE
+
+History should also contain Reports.
+
+---
+
+## Analysis History Table
+
+Columns:
+
+* Analysis ID
+* Patient Name
+* Date
+* Prediction
+* Confidence
+* Risk Level
+
+Actions:
+
+* View Details
+* Download Report
+* Print Report
+* Share Report
+* Delete Record
+
+Features:
+
+* Search
+* Filter
+* Sort
+* Pagination
+
+---
+
+## Recent Analyses
+
+Show latest scans.
+
+---
+
+## Condition Distribution
+
+Display charts:
+
+* Melanoma
+* Basal Cell Carcinoma
+* Benign Keratosis
+* Nevus
+
+---
+
+## Patient Diagnosis Evolution
+
+Track disease progression over time.
+
+Display:
+
+* Melanoma Trend
+* Basal Cell Carcinoma Trend
+* Benign Keratosis Trend
+* Nevus Trend
+
+Interactive Charts
+
+---
+
+# REPORTS SECTION (INSIDE HISTORY)
+
+Generate Professional Medical PDF Reports.
+
+Include:
+
+## Patient Information
+
+* Patient Name
+* Age
+* Gender
+* Address
+* Phone
+* Email
+
+## Clinical Information
+
+* Lesion Location
+* Symptoms
+* Clinical Notes
+* Family History
+* Previous Skin Cancer History
+
+## AI Findings
+
+* Prediction
+* Confidence Score
+* Risk Level
+* Lesion Area %
+* Segmentation Image
+* Heatmap Image
+
+## Doctor Recommendation
+
+## Hospital Information
+
+## QR Verification Code
+
+Buttons:
+
+* Download PDF
+* Print Report
+* Share Report
+
+---
+
+# DOCTORS PAGE
+
+Create Dermatologist Directory.
+
+City Filters:
+
+* All
+* Lahore
+* Karachi
+* Islamabad
+* Rawalpindi
+* Peshawar
+
+Doctor Card Includes:
+
+* Photo
+* Name
+* Qualification
+* Specialization
+* Hospital
+* Rating
+* Experience
+* Availability
+
+Actions:
+
+* Message
+* Call Request
+* Book Appointment
+
+---
+
+# APPOINTMENT SYSTEM
+
+Fields:
+
+* Full Name
+* Phone Number
+* Email
+* Message
+
+Actions:
+
+* Save Appointment
+* WhatsApp Notification
+* Email Notification
+* Doctor Dashboard Notification
+
+---
+
+# SETTINGS PAGE
+
+Settings page should include Profile section.
+
+---
+
+## Profile Section
+
+Display:
+
+* Profile Picture
+* Full Name
+* Email
+* Phone Number
+* Address
+* Total Scans
+* Joined Date
+
+Buttons:
+
+* Edit Profile
+* Change Password
+* Update Profile Picture
+
+---
+
+## Application Settings
+
+Options:
+
+* Dark Mode
+* Notification Settings
+* Email Notifications
+* WhatsApp Notifications
+* Report Alerts
+* Language Selection
+* Privacy Settings
+* Security Settings
+
+---
+
+# ADMIN PANEL
+
+Features:
+
+* Manage Users
+* Manage Doctors
+* View Reports
+* View Analytics
+* Delete Records
+* Monitor AI Performance
+* View Appointment Requests
+
+---
+
+# DATABASE TABLES
+
+## Users
+
+* id
+* name
+* email
+* password
+* role
+
+## Patients
+
+* id
+* patient_name
+* age
+* gender
+* address
+* phone
+* email
+* lesion_location
+* symptoms
+* family_history
+* previous_cancer_history
+* clinical_notes
+
+## Analysis
+
+* id
+* patient_id
+* image_path
+* prediction
+* confidence
+* risk_level
+* lesion_area
+* created_at
+
+## Doctors
+
+* id
+* name
+* specialization
+* experience
+* hospital
+* whatsapp
+
+## Appointments
+
+* id
+* patient_id
+* doctor_id
+* message
+* status
+
+## Reports
+
+* id
+* analysis_id
+* pdf_path
+
+---
+
+# SECURITY
+
+* JWT Authentication
+* Password Hashing
+* Protected Routes
+* SQL Injection Protection
+* XSS Protection
+* Secure File Upload
+
+---
+
+# ADDITIONAL FEATURES
+
+* Real-Time Notifications
+* Doctor Dashboard
+* Export to Excel
+* Cloud Storage
+* Email Reports
+* Mobile Responsive Design
+* Loading Animations
+* Error Handling
+* Multi-Language Support
+
+---
+
+# FINAL USER FLOW
+
+Login
+
+↓
+
+Dashboard
+
+↓
+
+New Analysis
+
+↓
+
+AI Prediction Result
+
+↓
+
+History (Reports Included)
+
+↓
+
+Doctors
+
+↓
+
+Settings (Profile Included)
+
+↓
+
+Logout
+
+---
+
+# GOAL
+
+Build a complete hospital-grade AI dermatology platform that performs skin cancer detection, lesion segmentation, Grad-CAM heatmap visualization, patient management, PDF reporting, diagnosis history tracking, doctor consultation, appointment booking, WhatsApp notifications, and advanced analytics with a premium dark medical dashboard UI.

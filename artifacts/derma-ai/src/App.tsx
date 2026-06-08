@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState } from "react";
 import {
-  LayoutDashboard, Scan, Users, History, UserCircle,
-  LogOut, FileText, ChevronRight, Activity, Bell, Settings
+  LayoutDashboard, Scan, Users, History,
+  LogOut, ChevronRight, Activity, Bell, Settings
 } from "lucide-react";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
@@ -22,9 +22,7 @@ const SIDEBAR_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard",    path: "/" },
   { icon: Scan,            label: "New Analysis", path: "/analyze", arrow: true },
   { icon: History,         label: "History",      path: "/history" },
-  { icon: FileText,        label: "Reports",      path: "/reports" },
   { icon: Users,           label: "Doctors",      path: "/doctors" },
-  { icon: UserCircle,      label: "Profile",      path: "/profile" },
   { icon: Settings,        label: "Settings",     path: "/settings" },
 ];
 
@@ -33,7 +31,7 @@ const TOP_NAV = [
   { label: "Analyze",   path: "/analyze" },
   { label: "History",   path: "/history" },
   { label: "Doctors",   path: "/doctors" },
-  { label: "About",     path: "/profile" },
+  { label: "Settings",  path: "/settings" },
 ];
 
 function getInitials(name: string) {
