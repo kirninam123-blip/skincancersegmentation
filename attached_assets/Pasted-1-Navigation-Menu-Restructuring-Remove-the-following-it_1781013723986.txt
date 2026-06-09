@@ -1,0 +1,113 @@
+1. Navigation Menu Restructuring
+Remove the following items from the left-side navigation menu:
+
+Dashboard
+
+New Analysis
+
+History
+
+Doctors
+
+Settings
+
+2. Appointment & WhatsApp Integration
+Booking Notification
+When a patient books an appointment, the selected doctor shall receive a real-time WhatsApp notification automatically.
+
+Call Request Flow
+If a patient wishes to call the doctor, the system must first send a WhatsApp message to the doctor containing:
+
+Patient Name
+
+Patient Problem / Condition
+
+A message stating: "The patient wishes to contact you through the AI Dermascan platform."
+
+All notifications must be delivered directly to the doctor's registered WhatsApp number.
+
+3. About Section
+Add an About section immediately after Settings with the following content:
+
+*AI Dermascan is an AI-assisted skin analysis platform designed to support dermatologists and patients. The system does not provide a final medical diagnosis and should not be considered 100% accurate. AI models assist in skin lesion analysis and can provide approximately 90% accuracy under suitable conditions. Final diagnosis, treatment recommendations, and medical decisions should always be made by qualified healthcare professionals.*
+
+4. Settings Section – Role-Based Profiles
+Retain only two profile types:
+
+Patient Profile
+Visible only when a normal user / patient is logged in.
+
+Dermatologist Profile
+Visible only when a dermatologist is logged in.
+
+The interface must automatically display the appropriate profile section based on the logged-in user's role.
+
+5. New Analysis Workflow
+User flow for New Analysis:
+
+Enter patient information
+
+Upload skin image
+
+Start AI analysis
+
+Display advanced medical analysis results
+
+Post-Upload Analysis Interface
+After image upload, the system must present an advanced, futuristic medical analysis interface comprising the following sections:
+
+Original Image
+
+Segmentation
+
+Heatmap
+
+Details
+
+Quantum Bio (prominently displayed with a premium, futuristic AI-medical aesthetic)
+
+6. Reports Section
+Replace the previous dashboard overview with a dedicated Reports Section.
+
+Post-Analysis Report Page
+Following each completed analysis, the report page must include the following tabs:
+
+Original Image
+
+Segmentation
+
+Heatmap
+
+Details
+
+Quantum Bio
+
+Quantum Bio Section Requirements
+This section must include:
+
+Advanced medical visualization cards
+
+AI diagnostic insights
+
+Lesion analysis information
+
+Disease probability indicators
+
+Professional medical graphs and charts
+
+High-tech futuristic UI elements
+
+7. Visual & Theming Consistency
+All sections must adhere to the existing dark futuristic AI-medical theme, maintaining:
+
+Color palette
+
+Typography
+
+Animations
+
+Card styles
+
+Dashboard design language
+
+Overall UX Objective

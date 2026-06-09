@@ -1,37 +1,36 @@
-import { Switch, Route, Router as WouterRouter, Link, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, Link, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState } from "react";
 import {
-  LayoutDashboard, Scan, Users, History,
-  LogOut, ChevronRight, Activity, Bell, Settings
+  Scan, Users, FileText, Settings, Info,
+  LogOut, ChevronRight, Activity, Bell,
 } from "lucide-react";
 import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
 import Analyze from "@/pages/Analyze";
 import Doctors from "@/pages/Doctors";
 import HistoryPage from "@/pages/HistoryPage";
-import ReportsPage from "@/pages/ReportsPage";
 import Profile from "@/pages/Profile";
+import About from "@/pages/About";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } });
 
 const SIDEBAR_ITEMS = [
-  { icon: LayoutDashboard, label: "Dashboard",    path: "/" },
-  { icon: Scan,            label: "New Analysis", path: "/analyze", arrow: true },
-  { icon: History,         label: "History",      path: "/history" },
-  { icon: Users,           label: "Doctors",      path: "/doctors" },
-  { icon: Settings,        label: "Settings",     path: "/settings" },
+  { icon: Scan,     label: "New Analysis", path: "/analyze",  arrow: true },
+  { icon: FileText, label: "Reports",      path: "/reports"              },
+  { icon: Users,    label: "Doctors",      path: "/doctors"              },
+  { icon: Settings, label: "Settings",     path: "/settings"             },
+  { icon: Info,     label: "About",        path: "/about"                },
 ];
 
 const TOP_NAV = [
-  { label: "Dashboard", path: "/" },
-  { label: "Analyze",   path: "/analyze" },
-  { label: "History",   path: "/history" },
-  { label: "Doctors",   path: "/doctors" },
-  { label: "Settings",  path: "/settings" },
+  { label: "New Analysis", path: "/analyze"  },
+  { label: "Reports",      path: "/reports"  },
+  { label: "Doctors",      path: "/doctors"  },
+  { label: "Settings",     path: "/settings" },
+  { label: "About",        path: "/about"    },
 ];
 
 function getInitials(name: string) {
@@ -42,7 +41,7 @@ function AppLayout({ user, onLogout }: { user: { name: string; role: string }; o
   const [location] = useLocation();
 
   function isActive(path: string) {
-    if (path === "/") return location === "/";
+    if (path === "/analyze") return location === "/" || location.startsWith("/analyze");
     return location.startsWith(path.split("?")[0]);
   }
 
@@ -129,13 +128,20 @@ function AppLayout({ user, onLogout }: { user: { name: string; role: string }; o
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto scrollbar-thin">
           <Switch>
-            <Route path="/"         component={Dashboard} />
+            <Route path="/">
+              <Redirect to="/analyze" />
+            </Route>
             <Route path="/analyze"  component={Analyze} />
-            <Route path="/doctors"  component={Doctors} />
+            <Route path="/reports"  component={HistoryPage} />
             <Route path="/history"  component={HistoryPage} />
-            <Route path="/reports"  component={ReportsPage} />
-            <Route path="/profile"  component={Profile} />
-            <Route path="/settings" component={Profile} />
+            <Route path="/doctors"  component={Doctors} />
+            <Route path="/settings">
+              <Profile userRole={user.role} />
+            </Route>
+            <Route path="/profile">
+              <Profile userRole={user.role} />
+            </Route>
+            <Route path="/about"    component={About} />
             <Route component={NotFound} />
           </Switch>
         </main>

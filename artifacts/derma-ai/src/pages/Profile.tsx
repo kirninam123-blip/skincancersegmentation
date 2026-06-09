@@ -16,13 +16,18 @@ const TABS = [
   { key: "about",         label: "About DermaAI",    icon: Info     },
 ];
 
-export default function Profile() {
+export default function Profile({ userRole = "Dermatologist" }: { userRole?: string }) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   const [showPass, setShowPass] = useState(false);
+
+  // Role-based profile switcher — default to role passed from login
+  const isDoctor = userRole?.toLowerCase().includes("doctor") || userRole?.toLowerCase().includes("derm");
+  const [role, setRole] = useState<"patient" | "dermatologist">(isDoctor ? "dermatologist" : "patient");
+
   const [form, setForm] = useState({
-    name: "Dr. Muhammad Ali",
-    email: "dr.muhammadali@dermaai.pk",
+    name: role === "dermatologist" ? "Dr. Muhammad Ali" : "Muhammad Ali",
+    email: role === "dermatologist" ? "dr.muhammadali@dermaai.pk" : "patient@email.pk",
     phone: "+92-300-1234567",
     specialty: "Dermatologist",
     hospital: "Aga Khan University Hospital",
@@ -30,6 +35,11 @@ export default function Profile() {
     experience: "15",
     license: "PMDC-12345",
     bio: "Senior dermatologist with 15 years of experience in skin cancer detection and treatment.",
+    // Patient-specific fields
+    age: "32",
+    address: "House 12, Street 5, Lahore",
+    bloodGroup: "O+",
+    medicalHistory: "",
   });
   const [notifications, setNotifications] = useState({
     emergencyAlerts: true,
@@ -68,9 +78,30 @@ export default function Profile() {
 
   return (
     <div className="p-4 lg:p-6 space-y-5 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Account</h1>
-        <p className="text-muted-foreground text-sm">Manage your profile, settings, and preferences</p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Account Settings</h1>
+          <p className="text-muted-foreground text-sm">Manage your profile, settings, and preferences</p>
+        </div>
+        {/* Role switcher */}
+        <div className="flex items-center gap-1 bg-card border border-border rounded-xl p-1">
+          <button
+            onClick={() => setRole("patient")}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              role === "patient" ? "bg-primary text-white" : "text-muted-foreground hover:text-white"
+            }`}
+          >
+            👤 Patient Profile
+          </button>
+          <button
+            onClick={() => setRole("dermatologist")}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              role === "dermatologist" ? "bg-primary text-white" : "text-muted-foreground hover:text-white"
+            }`}
+          >
+            🩺 Dermatologist Profile
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
@@ -130,39 +161,63 @@ export default function Profile() {
           {/* Profile Tab */}
           {activeTab === "profile" && (
             <div className="space-y-5">
-              <h2 className="text-white font-bold text-base">Personal Information</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { label: "Full Name", key: "name", placeholder: "Dr. Muhammad Ali" },
-                  { label: "Email Address", key: "email", placeholder: "doctor@hospital.pk" },
-                  { label: "Phone Number", key: "phone", placeholder: "+92-300-XXXXXXX" },
-                  { label: "Specialty", key: "specialty", placeholder: "Dermatologist" },
-                  { label: "Hospital / Clinic", key: "hospital", placeholder: "Hospital name" },
-                  { label: "City", key: "city", placeholder: "Karachi" },
-                  { label: "Years of Experience", key: "experience", placeholder: "15" },
-                  { label: "PMDC License No.", key: "license", placeholder: "PMDC-XXXXX" },
-                ].map(({ label, key, placeholder }) => (
-                  <div key={key}>
-                    <label className="text-xs text-muted-foreground block mb-1.5">{label}</label>
-                    <Input
-                      value={form[key as keyof typeof form]}
-                      onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
-                      placeholder={placeholder}
-                      className="bg-background h-9 text-sm"
-                      data-testid={`input-profile-${key}`}
-                    />
+              <div className="flex items-center gap-3">
+                <h2 className="text-white font-bold text-base">
+                  {role === "dermatologist" ? "🩺 Dermatologist Profile" : "👤 Patient Profile"}
+                </h2>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                  role === "dermatologist"
+                    ? "bg-purple-900/30 text-purple-300 border-purple-700/40"
+                    : "bg-blue-900/30 text-blue-300 border-blue-700/40"
+                }`}>
+                  {role === "dermatologist" ? "Medical Professional" : "Patient"}
+                </span>
+              </div>
+
+              {role === "dermatologist" ? (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {([
+                      { label: "Full Name",           key: "name",       placeholder: "Dr. Muhammad Ali" },
+                      { label: "Email Address",       key: "email",      placeholder: "doctor@hospital.pk" },
+                      { label: "Phone Number",        key: "phone",      placeholder: "+92-300-XXXXXXX" },
+                      { label: "Specialty",           key: "specialty",  placeholder: "Dermatologist" },
+                      { label: "Hospital / Clinic",   key: "hospital",   placeholder: "Hospital name" },
+                      { label: "City",                key: "city",       placeholder: "Karachi" },
+                      { label: "Years of Experience", key: "experience", placeholder: "15" },
+                      { label: "PMDC License No.",    key: "license",    placeholder: "PMDC-XXXXX" },
+                    ] as const).map(({ label, key, placeholder }) => (
+                      <div key={key}>
+                        <label className="text-xs text-muted-foreground block mb-1.5">{label}</label>
+                        <Input value={form[key as keyof typeof form]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} placeholder={placeholder} className="bg-background h-9 text-sm" />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1.5">Bio / About</label>
-                <textarea
-                  value={form.bio}
-                  onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
-                  className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-white resize-none h-20 focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder="Brief professional description..."
-                />
-              </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1.5">Bio / About</label>
+                    <textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))} className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-white resize-none h-20 focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Brief professional description..." />
+                  </div>
+                </>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {([
+                    { label: "Full Name",                    key: "name",          placeholder: "Muhammad Ali",            span: false },
+                    { label: "Email Address",                key: "email",         placeholder: "patient@email.pk",        span: false },
+                    { label: "Phone Number",                 key: "phone",         placeholder: "+92-300-XXXXXXX",         span: false },
+                    { label: "Age",                          key: "age",           placeholder: "32",                      span: false },
+                    { label: "City",                         key: "city",          placeholder: "Lahore",                  span: false },
+                    { label: "Blood Group",                  key: "bloodGroup",    placeholder: "O+",                      span: false },
+                    { label: "Home Address",                 key: "address",       placeholder: "House No., Street, City", span: true  },
+                    { label: "Medical History / Conditions", key: "medicalHistory",placeholder: "e.g. Diabetes, asthma...",span: true  },
+                  ] as const).map(({ label, key, placeholder, span }) => (
+                    <div key={key} className={span ? "sm:col-span-2" : ""}>
+                      <label className="text-xs text-muted-foreground block mb-1.5">{label}</label>
+                      <Input value={form[key as keyof typeof form]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} placeholder={placeholder} className="bg-background h-9 text-sm" />
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <Button onClick={handleSaveProfile} className="gradient-purple border-0" data-testid="button-save-profile">
                 <Save size={14} className="mr-2" /> Save Changes
               </Button>
