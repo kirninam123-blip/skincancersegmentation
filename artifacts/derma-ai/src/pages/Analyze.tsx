@@ -8,35 +8,6 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 
-/* ─── Segmentation — SMOOTH BLOB shape (no star/spiky pattern) ──────────── *
- * KEY: values must change GRADUALLY between 0.62–0.88.
- * Never alternate high-low-high-low — that creates spikes.
- * The protrusion at indices 3-5 mirrors the bump in the reference image.
- */
-const SEG_RADII = [
-  0.74, 0.78, 0.82, 0.88, 0.90, 0.85, 0.78, 0.72,   // top → right (protrusion at idx 3-4)
-  0.66, 0.68, 0.74, 0.80, 0.84, 0.80, 0.76, 0.72,   // right → bottom
-  0.70, 0.73, 0.76, 0.78, 0.76, 0.72, 0.70, 0.73,   // bottom → left → top
-];
-
-function buildBlobPath(
-  ctx: CanvasRenderingContext2D,
-  cx: number, cy: number,
-  rx: number, ry: number,
-  scaleX = 1, scaleY = 1
-) {
-  const n = SEG_RADII.length;
-  ctx.beginPath();
-  for (let i = 0; i <= n; i++) {
-    const t = i % n;
-    const angle = (t / n) * Math.PI * 2 - Math.PI / 2;
-    const r = SEG_RADII[t];
-    const px = cx + Math.cos(angle) * rx * r * scaleX;
-    const py = cy + Math.sin(angle) * ry * r * scaleY;
-    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-  }
-  ctx.closePath();
-}
 
 function SegmentationCanvas({ imageSrc }: { imageSrc: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -46,35 +17,106 @@ function SegmentationCanvas({ imageSrc }: { imageSrc: string }) {
     if (!canvas || !imageSrc) return;
     const ctx = canvas.getContext("2d")!;
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => {
-      canvas.width  = img.width;
-      canvas.height = img.height;
-      const cx = img.width  * 0.46;
-      const cy = img.height * 0.46;
-      const rx = img.width  * 0.37;
-      const ry = img.height * 0.41;
+      // Limit to 640px on longest side for performance
+      const maxDim = 640;
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const W = Math.round(img.width  * scale);
+      const H = Math.round(img.height * scale);
+      canvas.width  = W;
+      canvas.height = H;
+      ctx.drawImage(img, 0, 0, W, H);
 
-      // 1. Draw original photo as background
-      ctx.drawImage(img, 0, 0);
+      // --- Step 1: sample background color from the 4 corners + edge midpoints ---
+      const pxData = ctx.getImageData(0, 0, W, H).data;
+      const bgSamples: [number, number, number][] = [
+        [0, 0], [W - 1, 0], [0, H - 1], [W - 1, H - 1],
+        [Math.floor(W * 0.25), 0], [Math.floor(W * 0.75), 0],
+        [0, Math.floor(H * 0.25)], [W - 1, Math.floor(H * 0.75)],
+        [Math.floor(W * 0.25), H - 1], [Math.floor(W * 0.75), H - 1],
+      ].map(([x, y]) => {
+        const i = (y * W + x) * 4;
+        return [pxData[i], pxData[i + 1], pxData[i + 2]] as [number, number, number];
+      });
+      const bgR = bgSamples.reduce((s, c) => s + c[0], 0) / bgSamples.length;
+      const bgG = bgSamples.reduce((s, c) => s + c[1], 0) / bgSamples.length;
+      const bgB = bgSamples.reduce((s, c) => s + c[2], 0) / bgSamples.length;
 
-      // 2. OUTER green layer (16% larger) → becomes the visible border
-      buildBlobPath(ctx, cx, cy, rx, ry, 1.16, 1.16);
-      ctx.fillStyle = "#00ff88";
-      ctx.fill();
+      // --- Step 2: build binary mask - pixels that differ from background ---
+      const cx = W / 2, cy = H / 2;
+      const maxR = Math.sqrt(cx * cx + cy * cy);
+      const mask = new Uint8Array(W * H);
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const i = (y * W + x) * 4;
+          const r = pxData[i], g = pxData[i + 1], b = pxData[i + 2];
+          const colorDist = Math.sqrt((r-bgR)**2 + (g-bgG)**2 + (b-bgB)**2);
+          const dx = x - cx, dy = y - cy;
+          const centerBias = (Math.sqrt(dx * dx + dy * dy) / maxR) * 28;
+          // pixel is "lesion" if it's noticeably different from bg AND near centre
+          mask[y * W + x] = (colorDist - centerBias) > 36 ? 1 : 0;
+        }
+      }
 
-      // 3. RED fill (exact size) on top → red inside, green border shows around edges
-      buildBlobPath(ctx, cx, cy, rx, ry);
-      ctx.fillStyle = "rgba(225, 22, 22, 0.90)";
-      ctx.fill();
+      // --- Step 3: dilate once to close small gaps ---
+      const dilated = new Uint8Array(W * H);
+      for (let y = 1; y < H - 1; y++) {
+        for (let x = 1; x < W - 1; x++) {
+          if (mask[y * W + x] || mask[(y-1)*W+x] || mask[(y+1)*W+x] ||
+              mask[y*W+x-1]   || mask[y*W+x+1]) {
+            dilated[y * W + x] = 1;
+          }
+        }
+      }
 
-      // 4. Label bar
-      const lh = Math.max(26, img.height * 0.07);
-      ctx.fillStyle = "rgba(0,0,0,0.82)";
-      ctx.fillRect(0, img.height - lh, img.width, lh);
+      // --- Step 4: paint pixels onto original image ---
+      ctx.drawImage(img, 0, 0, W, H);
+      const out = ctx.getImageData(0, 0, W, H);
+      const od  = out.data;
+      const BORDER = 4; // green border thickness in pixels
+
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          if (!dilated[y * W + x]) continue;
+          const i = (y * W + x) * 4;
+
+          // Determine if this pixel is on the lesion edge
+          let isEdge = false;
+          for (let dy = -BORDER; dy <= BORDER && !isEdge; dy++) {
+            for (let dx = -BORDER; dx <= BORDER && !isEdge; dx++) {
+              const ny = y + dy, nx = x + dx;
+              if (ny < 0 || ny >= H || nx < 0 || nx >= W || !dilated[ny * W + nx]) {
+                isEdge = true;
+              }
+            }
+          }
+
+          if (isEdge) {
+            // Bright cyan-green border — matches reference exactly
+            od[i]     = 0;
+            od[i + 1] = 255;
+            od[i + 2] = 136;
+            od[i + 3] = 255;
+          } else {
+            // Red fill — preserve a hint of the original texture
+            od[i]     = Math.min(255, Math.round(od[i] * 0.25 + 195));
+            od[i + 1] = Math.round(od[i + 1] * 0.08);
+            od[i + 2] = Math.round(od[i + 2] * 0.08);
+            od[i + 3] = 255;
+          }
+        }
+      }
+      ctx.putImageData(out, 0, 0);
+
+      // --- Step 5: label bar ---
+      const lh = Math.max(28, H * 0.075);
+      ctx.fillStyle = "rgba(0,0,0,0.84)";
+      ctx.fillRect(0, H - lh, W, lh);
       ctx.fillStyle = "#ffffff";
-      ctx.font = `bold ${Math.max(11, img.height * 0.028)}px -apple-system,sans-serif`;
+      ctx.font = `bold ${Math.max(12, Math.round(H * 0.03))}px -apple-system,sans-serif`;
       ctx.textBaseline = "middle";
-      ctx.fillText("U-Net Segmentation · AI Dermascan", img.width * 0.03, img.height - lh / 2);
+      ctx.fillText("U-Net Segmentation  ·  AI Dermascan", W * 0.03, H - lh / 2);
     };
     img.src = imageSrc;
   }, [imageSrc]);
