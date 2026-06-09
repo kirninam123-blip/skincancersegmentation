@@ -3,11 +3,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState } from "react";
-import {
-  Scan, Users, FileText, Settings, Info,
-  LogOut, ChevronRight, Activity, Bell,
-} from "lucide-react";
+import { Activity, Bell, LogOut } from "lucide-react";
 import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
 import Analyze from "@/pages/Analyze";
 import Doctors from "@/pages/Doctors";
 import HistoryPage from "@/pages/HistoryPage";
@@ -17,20 +15,22 @@ import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } });
 
-const SIDEBAR_ITEMS = [
-  { icon: Scan,     label: "New Analysis", path: "/analyze",  arrow: true },
-  { icon: FileText, label: "Reports",      path: "/reports"              },
-  { icon: Users,    label: "Doctors",      path: "/doctors"              },
-  { icon: Settings, label: "Settings",     path: "/settings"             },
-  { icon: Info,     label: "About",        path: "/about"                },
+const PATIENT_NAV = [
+  { label: "Dashboard",    path: "/dashboard" },
+  { label: "New Analysis", path: "/analyze"   },
+  { label: "My Reports",   path: "/reports"   },
+  { label: "Doctors",      path: "/doctors"   },
+  { label: "Settings",     path: "/settings"  },
+  { label: "About",        path: "/about"     },
 ];
 
-const TOP_NAV = [
-  { label: "New Analysis", path: "/analyze"  },
-  { label: "Reports",      path: "/reports"  },
-  { label: "Doctors",      path: "/doctors"  },
-  { label: "Settings",     path: "/settings" },
-  { label: "About",        path: "/about"    },
+const DOCTOR_NAV = [
+  { label: "Dashboard",    path: "/dashboard" },
+  { label: "New Analysis", path: "/analyze"   },
+  { label: "Reports",      path: "/reports"   },
+  { label: "Doctors",      path: "/doctors"   },
+  { label: "Settings",     path: "/settings"  },
+  { label: "About",        path: "/about"     },
 ];
 
 function getInitials(name: string) {
@@ -39,113 +39,93 @@ function getInitials(name: string) {
 
 function AppLayout({ user, onLogout }: { user: { name: string; role: string }; onLogout: () => void }) {
   const [location] = useLocation();
+  const isDoctor = user.role === "Dermatologist";
+  const navItems = isDoctor ? DOCTOR_NAV : PATIENT_NAV;
 
   function isActive(path: string) {
-    if (path === "/analyze") return location === "/" || location.startsWith("/analyze");
+    if (path === "/dashboard") return location === "/" || location.startsWith("/dashboard");
     return location.startsWith(path.split("?")[0]);
   }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
-      {/* ── Top Header ─────────────────────────────────────── */}
-      <header className="flex items-center border-b border-border bg-card px-4 shrink-0 z-30" style={{ height: "52px" }}>
+      {/* ── Header with full-width navigation ──────────────── */}
+      <header className="flex items-center border-b border-border bg-card px-5 shrink-0 z-30 gap-4" style={{ height: "54px" }}>
         {/* Logo */}
-        <div className="flex items-center gap-2.5 w-44 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           <div className="w-8 h-8 rounded-lg gradient-purple flex items-center justify-center shrink-0">
-            <Activity size={16} className="text-white" />
+            <Activity size={15} className="text-white" />
           </div>
-          <div className="leading-tight">
+          <div className="leading-tight hidden sm:block">
             <div className="text-white font-bold text-sm">AI Dermascan</div>
             <div className="text-muted-foreground text-[10px]">Skin Cancer Detection</div>
           </div>
         </div>
 
-        {/* Top nav */}
-        <nav className="flex items-center gap-1 flex-1 justify-center">
-          {TOP_NAV.map(({ label, path }) => (
+        {/* Role badge */}
+        <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border shrink-0 ${
+          isDoctor
+            ? "bg-purple-900/30 text-purple-300 border-purple-700/40"
+            : "bg-blue-900/30 text-blue-300 border-blue-700/40"
+        }`}>
+          {isDoctor ? "🩺" : "👤"} {user.role}
+        </div>
+
+        {/* Nav */}
+        <nav className="flex items-center gap-0.5 flex-1 overflow-x-auto">
+          {navItems.map(({ label, path }) => (
             <Link key={path} href={path}>
-              <div className={`px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
-                isActive(path) ? "bg-primary text-white" : "text-muted-foreground hover:text-white hover:bg-muted/30"
+              <div className={`px-3 py-2 rounded-lg text-[13px] font-medium cursor-pointer transition-colors whitespace-nowrap ${
+                isActive(path)
+                  ? "bg-primary text-white"
+                  : "text-muted-foreground hover:text-white hover:bg-muted/30"
               }`}>{label}</div>
             </Link>
           ))}
         </nav>
 
         {/* Right */}
-        <div className="flex items-center gap-3 w-44 justify-end">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="relative cursor-pointer">
-            <Bell size={18} className="text-muted-foreground hover:text-white transition-colors" />
+            <Bell size={17} className="text-muted-foreground hover:text-white transition-colors" />
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center">3</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full gradient-purple flex items-center justify-center cursor-pointer">
-              <span className="text-white text-xs font-bold">{getInitials(user.name)}</span>
+            <div className="w-7 h-7 rounded-full gradient-purple flex items-center justify-center cursor-pointer shrink-0">
+              <span className="text-white text-[10px] font-bold">{getInitials(user.name)}</span>
             </div>
-            <div className="hidden sm:block text-right">
+            <div className="hidden lg:block">
               <div className="text-white text-xs font-semibold leading-tight">{user.name}</div>
               <div className="text-muted-foreground text-[10px]">{user.role}</div>
             </div>
           </div>
+          <button onClick={onLogout} className="text-red-400 hover:text-red-300 transition-colors p-1">
+            <LogOut size={15} />
+          </button>
         </div>
       </header>
 
-      {/* ── Body ───────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar */}
-        <aside className="w-44 bg-sidebar border-r border-sidebar-border flex flex-col shrink-0 overflow-y-auto">
-          <nav className="flex-1 px-2 py-3 space-y-0.5">
-            {SIDEBAR_ITEMS.map(({ icon: Icon, label, path, arrow }) => (
-              <Link key={label} href={path}>
-                <div className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer text-sm transition-all ${
-                  isActive(path)
-                    ? "bg-primary text-white font-medium"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-white"
-                }`}>
-                  <Icon size={16} className="shrink-0" />
-                  <span className="flex-1 text-xs leading-tight">{label}</span>
-                  {arrow && <ChevronRight size={12} className="opacity-50 shrink-0" />}
-                </div>
-              </Link>
-            ))}
-          </nav>
-
-          {/* AI Accuracy */}
-          <div className="mx-2 mb-3 p-3 bg-purple-900/30 border border-purple-700/30 rounded-xl">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Activity size={12} className="text-purple-400" />
-              <span className="text-purple-300 text-[10px] font-semibold">AI Powered Accuracy</span>
-            </div>
-            <div className="text-white text-2xl font-bold leading-tight">96.4%</div>
-            <div className="text-muted-foreground text-[10px]">Overall Accuracy</div>
-            <div className="text-muted-foreground text-[10px]">Trained on 80k+ samples</div>
-          </div>
-
-          <button onClick={onLogout} className="flex items-center gap-2.5 px-5 py-3 text-red-400 hover:bg-red-900/20 transition-colors text-sm border-t border-sidebar-border w-full">
-            <LogOut size={16} /> <span className="text-xs">Logout</span>
-          </button>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto scrollbar-thin">
-          <Switch>
-            <Route path="/">
-              <Redirect to="/analyze" />
-            </Route>
-            <Route path="/analyze"  component={Analyze} />
-            <Route path="/reports"  component={HistoryPage} />
-            <Route path="/history"  component={HistoryPage} />
-            <Route path="/doctors"  component={Doctors} />
-            <Route path="/settings">
-              <Profile userRole={user.role} />
-            </Route>
-            <Route path="/profile">
-              <Profile userRole={user.role} />
-            </Route>
-            <Route path="/about"    component={About} />
-            <Route component={NotFound} />
-          </Switch>
-        </main>
-      </div>
+      {/* ── Full-width Main Content ─────────────────────────── */}
+      <main className="flex-1 overflow-y-auto scrollbar-thin">
+        <Switch>
+          <Route path="/">
+            <Redirect to="/dashboard" />
+          </Route>
+          <Route path="/dashboard"  component={Dashboard} />
+          <Route path="/analyze"    component={Analyze} />
+          <Route path="/reports"    component={HistoryPage} />
+          <Route path="/history"    component={HistoryPage} />
+          <Route path="/doctors"    component={Doctors} />
+          <Route path="/settings">
+            <Profile userRole={user.role} />
+          </Route>
+          <Route path="/profile">
+            <Profile userRole={user.role} />
+          </Route>
+          <Route path="/about"      component={About} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
     </div>
   );
 }
@@ -157,7 +137,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          {user ? <AppLayout user={user} onLogout={() => setUser(null)} /> : <Login onLogin={setUser} />}
+          {user
+            ? <AppLayout user={user} onLogout={() => setUser(null)} />
+            : <Login onLogin={setUser} />
+          }
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

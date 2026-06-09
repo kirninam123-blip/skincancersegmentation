@@ -1,0 +1,67 @@
+# AI Dermascan – Required Updates & Fixes
+
+1. The doctor phone numbers currently added do not have WhatsApp accounts. Replace them with valid WhatsApp-enabled numbers where possible.
+
+2. Restore the Dashboard to its previous design and functionality.
+
+3. Remove the entire left-side navigation panel.
+
+4. The Quantum Bio-Dermal section should be displayed in the right-side panel exactly as shown in the provided design.
+
+5. Improve the heatmap visualization so that it highlights only the detected lesion/cancer region instead of a large surrounding area.
+
+6. Create two completely separate portals:
+
+   * Patient/User Portal
+   * Dermatologist Portal
+
+   Remove unnecessary account-related features and keep the workflow clean and professional.
+
+7. Redesign the analysis report according to the website’s dark purple theme. The report must include:
+
+   * Original image
+   * Segmentation image
+   * Heatmap image
+   * Complete AI analysis details
+   * Patient information
+   * Diagnosis summary
+   * Prediction probabilities for all classes
+   * Analysis date and time
+   * Doctor comments (if available)
+
+8. Reports must be downloadable as professionally designed PDF files that match the website theme and include all images, charts, and analysis details.
+
+9. Doctor Communication System Enhancement
+
+   When a patient requests an appointment or wants to contact a doctor, the system must automatically notify the doctor using the best available communication channel.
+
+   Priority Order:
+
+   1. WhatsApp Message
+   2. Email Notification
+   3. In-App Notification (Doctor Dashboard)
+   4. SMS Notification
+   5. LinkedIn Message Integration (if available)
+
+   The notification should include:
+
+   * Patient Name
+   * Patient Contact Information
+   * Patient Issue/Reason for Consultation
+   * Appointment Request Details
+   * Date & Time
+
+   The system should automatically use an alternative communication method whenever WhatsApp is unavailable, ensuring that doctors never miss patient inquiries.
+
+10. Remove all dummy or fake doctor contact information and use only verified contact methods.
+
+11. The user interface should remain clean, modern, responsive, and professional, following the dark purple AI Dermascan theme throughout the application.
+
+12. The PDF report should contain side-by-side visual comparisons:
+
+* Original Image vs Segmentation
+* Original Image vs Heatmap
+* AI Prediction Summary
+* Detailed Medical Analysis Section
+
+13. Ensure that all generated reports can be stored in the patient's history and viewed later from the dashboard.
